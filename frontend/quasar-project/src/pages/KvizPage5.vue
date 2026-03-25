@@ -1,16 +1,16 @@
 <template>
   <div class="relative fixed-center">
-     <!-- Prikaz bodova -->
-     <div class="q-pa-md">
+    <!-- Prikaz bodova -->
+    <div class="q-pa-md">
       <div class="text-h6">Bodovi: {{ state.bodovi }}</div>
     </div>
-    
+
     <div class="q-pa-md q-gutter-sm">
       <q-banner inline-actions rounded class="bg-positive text-white">
         <div id class="text-h5 h5 full-width">
           <span><a id="clicks">1</a>. </span>
           <span id="pitanje"> {{ state.pitanje }} </span>
-          <span class="tezina"> (Težina: {{ state.tezina }}) </span> 
+          <span class="tezina"> (Težina: {{ state.tezina }}) </span>
         </div>
       </q-banner>
       <q-img width="700px" height="350px" :src="state.image" :ratio="16 / 9" />
@@ -28,37 +28,37 @@
 
     <div class="q-pa-md q-gutter-sm">
       <q-btn
-  id="PrihvatiOdgovor"
-  color="white"
-  text-color="black"
-  label="Prihvati odgovor"
-  @click="
-    prikaziGumb();
-    state.alert = true;
-    if (state.odabraniOdgovor === state.tocanOdgovor.id) {
-      state.brojTocnih += 1;
-      state.bodovi += state.tezina; // Dodaj bodove za točan odgovor
-    } else {
-      state.brojNetocnih += 1;
-    }
-  "
-/>
-<q-btn
-  id="PrihvatiIZavrsi"
-  color="white"
-  text-color="black"
-  label="Prihvati i završi"
-  @click="
-    if (state.odabraniOdgovor === state.tocanOdgovor.id) {
-      state.brojTocnih += 1;
-      state.bodovi += state.tezina; // Dodaj bodove za točan odgovor
-    } else {
-      state.brojNetocnih += 1;
-    }
-    state.zavrsniPopup = true;
-  "
-  disabled
-/>
+        id="PrihvatiOdgovor"
+        color="white"
+        text-color="black"
+        label="Prihvati odgovor"
+        @click="
+          prikaziGumb();
+          state.alert = true;
+          if (state.odabraniOdgovor === state.tocanOdgovor.id) {
+            state.brojTocnih += 1;
+            state.bodovi += state.tezina; // Dodaj bodove za točan odgovor
+          } else {
+            state.brojNetocnih += 1;
+          }
+        "
+      />
+      <q-btn
+        id="PrihvatiIZavrsi"
+        color="white"
+        text-color="black"
+        label="Prihvati i završi"
+        @click="
+          if (state.odabraniOdgovor === state.tocanOdgovor.id) {
+            state.brojTocnih += 1;
+            state.bodovi += state.tezina; // Dodaj bodove za točan odgovor
+          } else {
+            state.brojNetocnih += 1;
+          }
+          state.zavrsniPopup = true;
+        "
+        disabled
+      />
       <q-btn
         id="Refresh"
         color="white"
@@ -135,7 +135,7 @@
                 Broj netočnih odgovora: {{ state.brojNetocnih }}
               </q-card-section>
               <q-card-section class="q-pt-none">
-                Ukupni bodovi: {{ state.bodovi }} 
+                Ukupni bodovi: {{ state.bodovi }}
               </q-card-section>
               <q-card-actions align="center">
                 <q-btn
@@ -178,7 +178,6 @@ export default {
       tezina: 1, //tezina
     });
 
-    
     onMounted(async () => {
       await randomPlant();
       await getRandomBotanicalPlant();
@@ -192,11 +191,16 @@ export default {
     }
 
     async function getImage() {
-      const json = await axios.get(`http://localhost:3000/image/${state.plant.id}`);
+      const json = await axios.get(
+        `http://localhost:3000/image/${state.plant.id}`
+      );
       const data = json.data.data;
 
       if (data) {
-        if (Object.getOwnPropertyNames(json.data).length === 0 || json.data.data === undefined) {
+        if (
+          Object.getOwnPropertyNames(json.data).length === 0 ||
+          json.data.data === undefined
+        ) {
           state.image = "";
         } else {
           const image = data;
@@ -207,108 +211,103 @@ export default {
       }
     }
 
-// Funkcija za generiranje novog pitanja
-async function randomPlant() {
-  const jsonObject = await axios.get(`http://localhost:3000/plant_species/`);
-  let randomPlant = jsonObject.data.data[Math.floor(Math.random() * jsonObject.data.data.length)];
-  state.plant = randomPlant;
+    // Funkcija za generiranje novog pitanja
+    async function randomPlant() {
+      const jsonObject = await axios.get(
+        `http://localhost:3000/plant_species/`
+      );
+      let randomPlant =
+        jsonObject.data.data[
+          Math.floor(Math.random() * jsonObject.data.data.length)
+        ];
+      state.plant = randomPlant;
 
-  // Odredivanje tezine pitanja (nasumicna vrijednost izmedu 1 i 5)
-  state.tezina = Math.floor(Math.random() * 5) + 1;
+      // Odredivanje tezine pitanja (nasumicna vrijednost izmedu 1 i 5)
+      state.tezina = Math.floor(Math.random() * 5) + 1;
 
+      // Dodavanje novog pitanje u listu pitanja
+      state.pitanje = [
+        "Koji je latinski naziv za " + state.plant.croatian_name + "?",
+        "Koji je hrvatski naziv za " + state.plant.latin_name + "?",
+        "Kojoj botaničkoj porodici pripada " + state.plant.croatian_name + "?",
+        "Koja biljna vrsta se nalazi na slici?",
+        "Koji je rod biljke za " + state.plant.latin_name + "?", // novo pitanje
+        "Kojoj botaničkoj porodici pripada biljka sa slikom?", // novo pitanje
+      ];
 
-  // Dodavanje novog pitanje u listu pitanja
-  state.pitanje = [
-    "Koji je latinski naziv za " + state.plant.croatian_name + "?",
-    "Koji je hrvatski naziv za " + state.plant.latin_name + "?",
-    "Kojoj botaničkoj porodici pripada " + state.plant.croatian_name + "?",
-    "Koja biljna vrsta se nalazi na slici?",
-    "Koji je rod biljke za " + state.plant.latin_name + "?", // novo pitanje
-    "Kojoj botaničkoj porodici pripada biljka sa slikom?" // novo pitanje
-    
-   
-  ];
+      const randomQuestionIndex = Math.floor(
+        Math.random() * state.pitanje.length
+      );
+      state.tip_pitanja = randomQuestionIndex;
+      state.pitanje = state.pitanje[randomQuestionIndex];
 
-  
-  const randomQuestionIndex = Math.floor(Math.random() * state.pitanje.length);
-  state.tip_pitanja = randomQuestionIndex;
-  state.pitanje = state.pitanje[randomQuestionIndex];
+      // Pozivanje funkcije za dobivanje odgovora na osnovu tipa pitanja
+      await getAnswers();
+    }
 
+    // Funkcija za dobivanje odgovora na osnovu tipa pitanja
+    async function getAnswers() {
+      if (state.tip_pitanja === 5) {
+        // Dohvati korisne dijelove biljke
+        await getUsefulParts();
+      } else {
+        await getRandomBotanicalPlant();
+      }
+    }
 
-  // Pozivanje funkcije za dobivanje odgovora na osnovu tipa pitanja
-  await getAnswers();
-}
-
-
-// Funkcija za dobivanje odgovora na osnovu tipa pitanja
-async function getAnswers() {
-  if (state.tip_pitanja === 5) {
-    // Dohvati korisne dijelove biljke
-    await getUsefulParts();
-  } else {
-    await getRandomBotanicalPlant();
-  }
-}
-
-
-
-async function getAnswers() {
-  if (state.tip_pitanja === 0 || state.tip_pitanja === 2) {
-    await getRandomBotanicalPlant();
-  } else if (state.tip_pitanja === 1 || state.tip_pitanja === 3) {
-    await getRandomBotanicalPlant();
-  } else if (state.tip_pitanja === 6) {
-    await getUsefulParts();
-  }
-}
-
+    async function getAnswers() {
+      if (state.tip_pitanja === 0 || state.tip_pitanja === 2) {
+        await getRandomBotanicalPlant();
+      } else if (state.tip_pitanja === 1 || state.tip_pitanja === 3) {
+        await getRandomBotanicalPlant();
+      } else if (state.tip_pitanja === 6) {
+        await getUsefulParts();
+      }
+    }
 
     // Funkcija koja dohvaća rod biljke
-async function getGenus() {
-  const json = await axios.get(
-    `http://localhost:3000/plant_species/${state.plant.id}`
-  );
-  const data = json.data.data;
+    async function getGenus() {
+      const json = await axios.get(
+        `http://localhost:3000/plant_species/${state.plant.id}`
+      );
+      const data = json.data.data;
 
-  // Spremi točan odgovor u state.tocanOdgovor
-  state.tocanOdgovor = data;
+      // Spremi točan odgovor u state.tocanOdgovor
+      state.tocanOdgovor = data;
 
-  // Dohvati nasumične odgovore za rod biljaka
-  const jsonObject = await axios.get(
-    `http://localhost:3000/botanical_family`
-  );
-  const botanicalFamily = jsonObject.data.data;
-  
-  let genusList = [];
-  genusList.push(state.tocanOdgovor);
+      // Dohvati nasumične odgovore za rod biljaka
+      const jsonObject = await axios.get(
+        `http://localhost:3000/botanical_family`
+      );
+      const botanicalFamily = jsonObject.data.data;
 
-  while (genusList.length < 4) {
-    let index = Math.round(Math.random() * (botanicalFamily.length - 1));
-    let genusObject = {
-      id: botanicalFamily[index].id,
-      latin_name: botanicalFamily[index].latin_name,
-      croatian_name: botanicalFamily[index].croatian_name,
-    };
+      let genusList = [];
+      genusList.push(state.tocanOdgovor);
 
-    if (!genusList.some(g => g.id === genusObject.id)) {
-      genusList.push(genusObject);
+      while (genusList.length < 4) {
+        let index = Math.round(Math.random() * (botanicalFamily.length - 1));
+        let genusObject = {
+          id: botanicalFamily[index].id,
+          latin_name: botanicalFamily[index].latin_name,
+          croatian_name: botanicalFamily[index].croatian_name,
+        };
+
+        if (!genusList.some((g) => g.id === genusObject.id)) {
+          genusList.push(genusObject);
+        }
+      }
+
+      state.odgovori = genusList
+        .map((value) => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
+
+      state.odabraniOdgovor = state.odgovori[0].id;
     }
-  }
-
-  state.odgovori = genusList
-    .map((value) => ({ value, sort: Math.random() }))
-    .sort((a, b) => a.sort - b.sort)
-    .map(({ value }) => value);
-
-  state.odabraniOdgovor = state.odgovori[0].id;
-}
-
 
     async function getRandomBotanicalPlant() {
       const json = await axios.get(`http://localhost:3000/botanical_family`);
       const botanicalFamily = json.data.data;
-
-      
 
       let botanicList = [];
       await getCorrectAnswerFromBotanicalFamily();
@@ -341,7 +340,9 @@ async function getGenus() {
     }
 
     async function getCorrectAnswerFromBotanicalFamily() {
-      const json = await axios.get(`http://localhost:3000/plant_species/${state.plant.id}`);
+      const json = await axios.get(
+        `http://localhost:3000/plant_species/${state.plant.id}`
+      );
       state.tocanOdgovor = json.data.data;
     }
 
@@ -383,12 +384,13 @@ async function getGenus() {
         return odgovor.latin_name;
       } else if (pitanje.includes("nalazi na slici")) {
         return odgovor.croatian_name;
-      } else if (pitanje.includes("rod biljke")) {  // Dodajemo novu provjeru
+      } else if (pitanje.includes("rod biljke")) {
+        // Dodajemo novu provjeru
         return odgovor.croatian_name; //odgovori na hrvatskom
-      } else if (pitanje.includes("dio biljke najčešće korišten")) { // Novo pitanje
+      } else if (pitanje.includes("dio biljke najčešće korišten")) {
+        // Novo pitanje
         return odgovor.croatian_name;
       }
-      
     },
     brPitanja() {
       clicks += 1;
@@ -399,11 +401,11 @@ async function getGenus() {
 </script>
 
 <style>
-
-.tezina {  /*css tezina*/
-  font-size: 20px; 
-  color: white; 
-  margin-left: 10px; 
+.tezina {
+  /*css tezina*/
+  font-size: 20px;
+  color: white;
+  margin-left: 10px;
 }
 
 .q-card-section.q-pt-none {

@@ -4,3 +4,4 @@ Kviz Biljne vrste
 
 Članovi tima: 
 Paolo Pelesk
+Kristijan Rabak
