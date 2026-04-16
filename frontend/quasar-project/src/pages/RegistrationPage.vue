@@ -9,13 +9,13 @@
       <q-card-section>
         <q-form @submit="onSubmit" class="q-gutter-md">
 
-          <!-- NAME -->
+          <!-- NAME
           <q-input
             v-model="form.name"
             label="Full Name"
             outlined
             :rules="[val => !!val || 'Name is required']"
-          />
+          />-->
 
           <!-- EMAIL -->
           <q-input
@@ -95,13 +95,13 @@
 
 <script>
 import { ref, computed } from 'vue'
-
+import axios from 'axios'
 export default {
   name: 'RegisPage',
   setup() {
 
     const form = ref({
-      name: '',
+      //name: '',
       email: '',
       password: '',
       confirmPassword: ''
@@ -114,7 +114,7 @@ export default {
 
     const isFormValid = computed(() => {
       return (
-        form.value.name &&
+        // form.value.name &&
         form.value.email &&
         form.value.password &&
         form.value.confirmPassword &&
@@ -137,15 +137,29 @@ export default {
       if (score === 2) return { label: 'Medium', color: 'warning' }
       return { label: 'Strong', color: 'positive' }
     })
+const onSubmit = async () => {
+    loading.value = true
 
-    const onSubmit = async () => {
-      loading.value = true
+  try {
+    const res = await axios.post('http://localhost:3000/register', {
+      email: form.value.email,
+      password: form.value.password
+    })
 
-      setTimeout(() => {
-        console.log('Form submitted:', form.value)
-        loading.value = false
-      }, 1000)
-    }
+    console.log(res.data)
+    alert('Registracija uspješna!')
+
+  } catch (err) {
+    console.log('FULL ERROR:', err)
+    console.log('RESPONSE:', err.response)
+
+    alert(err.response?.data?.message || 'Greška na serveru')
+
+  } finally {
+    loading.value = false
+  }
+}
+
 
     return {
       form,

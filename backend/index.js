@@ -4,18 +4,24 @@ var bodyParser = require("body-parser");
 const dbConfig = require("./db.config.js");
 var mysql = require("mysql");
 const cors = require("cors");
-
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+app.use(express.json());
+//app.use(cors());
 app.use(
   cors({
     origin: "*",
   })
 );
+
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
     extended: false,
   })
 );
+
+
 
 // connection configurations
 var dbConn = mysql.createConnection({
@@ -318,6 +324,69 @@ app.get('/pitanje/:id', (req, res) => {
     });
   });
 });
+
+
+app.post('/register', (req, res) => {
+  console.log('BODY:', req.body);
+
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'All fields required' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Password too short' });
+  }
+
+  dbConn.query(
+    'SELECT id FROM `user` WHERE email = ?',
+    [email],
+    async (err, results) => {
+
+      if (err) {
+        console.error('SELECT ERROR:', err);
+        return res.status(500).json({ message: err.message });
+      }
+
+      if (results.length > 0) {
+        return res.status(409).json({ message: 'Email already exists' });
+      }
+
+      try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const activationHash = crypto.randomBytes(32).toString('hex');
+
+        dbConn.query(
+          `INSERT INTO \`user\` (email, password, active, activation_hash, role_id)
+           VALUES (?, ?, 1, ?, 1)`,
+          [email, hashedPassword, activationHash],
+          (err, result) => {
+
+            if (err) {
+              console.error('INSERT ERROR:', err);
+              return res.status(500).json({ message: err.message });
+            }
+
+            res.status(201).json({
+              message: 'User registered'
+            });
+          }
+        );
+
+      } catch (hashError) {
+        console.error('HASH ERROR:', hashError);
+        res.status(500).json({ message: 'Hash error' });
+      }
+    }
+  );
+});
+
 
 
 
