@@ -11,6 +11,8 @@ const routes = [
       { path: "kviz4", component: () => import("pages/KvizPage4.vue") },
       { path: "kviz5", component: () => import("pages/KvizPage5.vue") },
       { path: "registration", component: () => import("pages/RegistrationPage.vue") },
+      { path: "login", component: () => import("pages/LoginForm.vue") },
+
     ],
   },
 
