@@ -25,6 +25,23 @@
           flat
           icon="home"
         /> -->
+         <q-btn
+          v-if="!isLoggedIn"
+          label="Prijava"
+          color="white"
+          flat
+          icon="login"
+          to="/login"
+        />
+ 
+        <q-btn
+          v-else
+          label="Odjava"
+          color="white"
+          flat
+          icon="logout"
+          @click="logout"
+        />
         <q-btn
           href="https://www.agroklub.com/sortna-lista/"
           label="Agro klub"
@@ -42,8 +59,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from "vue";
-
+import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
 const linksList = [
   {
     title: "Link test",
@@ -59,9 +75,29 @@ export default defineComponent({
   setup() {
     const leftDrawerOpen = ref(false);
 
+    const isLoggedIn = ref(false);
+ 
+    // provjera auth stanja
+    const checkAuth = () => {
+      isLoggedIn.value = !!localStorage.getItem("token");
+    };
+
+    onMounted(() => {
+      checkAuth();
+ 
+      //reagira na login/logout iz drugih komponenti
+      window.addEventListener("storage", checkAuth);
+    });
+ 
+    onBeforeUnmount(() => {
+      window.removeEventListener("storage", checkAuth);
+    });
+
     return {
       essentialLinks: linksList,
       leftDrawerOpen,
+      isLoggedIn,
+      
       toggleLeftDrawer() {
         leftDrawerOpen.value = !leftDrawerOpen.value;
       },

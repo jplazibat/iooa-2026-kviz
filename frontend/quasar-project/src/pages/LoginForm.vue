@@ -98,7 +98,7 @@ const onSubmit = async () => {
     //  user 
     localStorage.setItem('user', JSON.stringify(res.data.user))
     
-
+    window.dispatchEvent(new Event('storage'))
 
     // login uspješan
     $q.notify({
