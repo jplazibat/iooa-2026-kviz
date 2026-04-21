@@ -25,7 +25,7 @@
           flat
           icon="home"
         /> -->
-         <q-btn
+        <q-btn
           v-if="!isLoggedIn"
           label="Prijava"
           color="white"
@@ -33,7 +33,7 @@
           icon="login"
           to="/login"
         />
- 
+
         <q-btn
           v-else
           label="Odjava"
@@ -58,8 +58,10 @@
   </q-layout>
 </template>
 
+
 <script>
 import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";//zvonimir
 const linksList = [
   {
     title: "Link test",
@@ -68,27 +70,42 @@ const linksList = [
     link: "https://quasar.dev",
   },
 ];
-
 export default defineComponent({
   name: "MainLayout",
 
   setup() {
-    const leftDrawerOpen = ref(false);
+    const router = useRouter();
 
+    const leftDrawerOpen = ref(false);
     const isLoggedIn = ref(false);
- 
+
     // provjera auth stanja
     const checkAuth = () => {
       isLoggedIn.value = !!localStorage.getItem("token");
     };
 
+    //logout funkcija zvonimir
+    const logout = () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      isLoggedIn.value = false;
+
+      router.push("/");
+    };
+
+    //  toggle drawer
+    const toggleLeftDrawer = () => {
+      leftDrawerOpen.value = !leftDrawerOpen.value;
+    };
+
     onMounted(() => {
       checkAuth();
- 
+
       //reagira na login/logout iz drugih komponenti
       window.addEventListener("storage", checkAuth);
     });
- 
+
     onBeforeUnmount(() => {
       window.removeEventListener("storage", checkAuth);
     });
@@ -96,11 +113,9 @@ export default defineComponent({
     return {
       essentialLinks: linksList,
       leftDrawerOpen,
+      toggleLeftDrawer,
       isLoggedIn,
-      
-      toggleLeftDrawer() {
-        leftDrawerOpen.value = !leftDrawerOpen.value;
-      },
+      logout,
     };
   },
 });
