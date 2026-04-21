@@ -9,7 +9,7 @@
       <q-card-section>
         <q-form @submit="onSubmit" class="q-gutter-md">
 
-          <!-- NAME-->
+          <!-- NAME -->
           <q-input
             v-model="form.name"
             label="Username"
@@ -105,7 +105,7 @@ export default {
     const router = useRouter()
 //$q.notify('Test radi!')
     const form = ref({
-      //name: '',
+      name: '',
       email: '',
       password: '',
       confirmPassword: ''
@@ -118,7 +118,7 @@ export default {
 
     const isFormValid = computed(() => {
       return (
-        // form.value.name &&
+        form.value.name &&
         form.value.email &&
         form.value.password &&
         form.value.confirmPassword &&
@@ -142,8 +142,6 @@ export default {
       if (score === 2) return { label: 'Medium', color: 'warning' }
       return { label: 'Strong', color: 'positive' }
     })
-const onSubmit = async () => {
-    loading.value = true
 
     const onSubmit = async () => {
   loading.value = true
@@ -192,7 +190,7 @@ setTimeout(() => {
       showPassword,
       showConfirmPassword,
       passwordStrength
-    }}
+    }
   }
 }
 
