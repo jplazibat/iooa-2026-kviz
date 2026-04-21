@@ -3,3 +3,4 @@ Kviz Biljne vrste
 
 ##Članovi tima
 - Michella Galich
+- Valentina Miculinić
