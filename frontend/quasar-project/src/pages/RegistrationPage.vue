@@ -9,13 +9,13 @@
       <q-card-section>
         <q-form @submit="onSubmit" class="q-gutter-md">
 
-          <!-- NAME
+          <!-- NAME-->
           <q-input
             v-model="form.name"
-            label="Full Name"
+            label="Username"
             outlined
-            :rules="[val => !!val || 'Name is required']"
-          />-->
+            :rules="[val => !!val || 'Username is required']"
+          />
 
           <!-- EMAIL -->
           <q-input
@@ -96,10 +96,14 @@
 <script>
 import { ref, computed } from 'vue'
 import axios from 'axios'
+import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
 export default {
   name: 'RegisPage',
   setup() {
-
+    const $q = useQuasar()
+    const router = useRouter()
+//$q.notify('Test radi!')
     const form = ref({
       //name: '',
       email: '',
@@ -122,6 +126,7 @@ export default {
       )
     })
 
+
     const passwordStrength = computed(() => {
       const pass = form.value.password
 
@@ -140,20 +145,38 @@ export default {
 const onSubmit = async () => {
     loading.value = true
 
+    const onSubmit = async () => {
+  loading.value = true
+
+
   try {
     const res = await axios.post('http://localhost:3000/register', {
+      name: form.value.name,
       email: form.value.email,
       password: form.value.password
     })
 
     console.log(res.data)
-    alert('Registracija uspješna!')
 
+    $q.notify({
+      type: 'positive',
+      message: 'Registracija uspješna!',
+      position: 'top',
+      timeout: 3000
+    })
+setTimeout(() => {
+  router.push('/login')
+}, 1500);
   } catch (err) {
     console.log('FULL ERROR:', err)
     console.log('RESPONSE:', err.response)
 
-    alert(err.response?.data?.message || 'Greška na serveru')
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.message || 'Greška na serveru',
+      position: 'top',
+      timeout: 4000
+    })
 
   } finally {
     loading.value = false
@@ -169,9 +192,10 @@ const onSubmit = async () => {
       showPassword,
       showConfirmPassword,
       passwordStrength
-    }
+    }}
   }
 }
+
 </script>
 
 <style scoped>

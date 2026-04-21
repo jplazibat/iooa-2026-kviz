@@ -42,6 +42,7 @@ module.exports = configure(function (ctx) {
       "material-icons", // optional, you are not bound to it
     ],
 
+
     // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-build
     build: {
       vueRouterMode: "hash", // available values: 'hash', 'history'
@@ -97,7 +98,7 @@ module.exports = configure(function (ctx) {
       // directives: [],
 
       // Quasar plugins
-      plugins: [],
+      plugins: ['Notify'],
     },
 
     // animations: 'all', // --- includes all animations

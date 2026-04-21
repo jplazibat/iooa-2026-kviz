@@ -325,13 +325,12 @@ app.get('/pitanje/:id', (req, res) => {
   });
 });
 
-
 app.post('/register', (req, res) => {
   console.log('BODY:', req.body);
 
-  const { email, password } = req.body;
+  const { email, password, name } = req.body;
 
-  if (!email || !password) {
+  if (!email || !password || !name) {
     return res.status(400).json({ message: 'All fields required' });
   }
 
@@ -344,6 +343,11 @@ app.post('/register', (req, res) => {
     return res.status(400).json({ message: 'Password too short' });
   }
 
+  if (name.length < 3) {
+    return res.status(400).json({ message: 'Username too short' });
+  }
+
+  // EMAIL CHECK
   dbConn.query(
     'SELECT id FROM `user` WHERE email = ?',
     [email],
@@ -358,30 +362,129 @@ app.post('/register', (req, res) => {
         return res.status(409).json({ message: 'Email already exists' });
       }
 
+      // USERNAME CHECK
+      dbConn.query(
+        'SELECT id FROM `user` WHERE username = ?',
+        [name],
+        async (err, usernameResults) => {
+
+          if (err) {
+            console.error('USERNAME CHECK ERROR:', err);
+            return res.status(500).json({ message: err.message });
+          }
+
+          if (usernameResults.length > 0) {
+            return res.status(409).json({ message: 'Username already exists' });
+          }
+
+          try {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const activationHash = crypto.randomBytes(32).toString('hex');
+
+            dbConn.query(
+              `INSERT INTO \`user\` (email, password, active, activation_hash, role_id, username)
+               VALUES (?, ?, 1, ?, 1, ?)`,
+              [email, hashedPassword, activationHash, name],
+              (err, result) => {
+
+                if (err) {
+                  console.error('INSERT ERROR:', err);
+                  return res.status(500).json({ message: err.message });
+                }
+
+                return res.status(201).json({
+                  message: 'User registered'
+                });
+              }
+            );
+
+          } catch (hashError) {
+            console.error('HASH ERROR:', hashError);
+            return res.status(500).json({ message: 'Hash error' });
+          }
+        }
+      ); // 👈 zatvoren username query
+    }
+  ); // 👈 zatvoren email query
+}); // 👈 zatvoren route
+
+
+
+
+
+app.post('/login', (req, res) => {
+  console.log('BODY:', req.body);
+
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'All fields required' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email' });
+  }
+
+  // 1. traženje usera po emailu
+  dbConn.query(
+    'SELECT id, email, password, username, role_id, active FROM `user` WHERE email = ? LIMIT 1',
+    [email],
+    async (err, results) => {
+
+      if (err) {
+        console.error('SELECT ERROR:', err);
+        return res.status(500).json({ message: err.message });
+      }
+
+      if (results.length === 0) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      const user = results[0];
+
+      // 2. provjera lozinke
       try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const activationHash = crypto.randomBytes(32).toString('hex');
+        const passwordMatch = await bcrypt.compare(password, user.password);
 
+        if (!passwordMatch) {
+          return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // 3.  provjera da li je user aktivan
+        if (user.active !== 1) {
+          return res.status(403).json({ message: 'Account not active' });
+        }
+
+        // 4. login OK → ovdje možeš napraviti JWT ili session
+        const token = crypto.randomBytes(32).toString('hex');
+
+        // spremanje session/token u bazu:
         dbConn.query(
-          `INSERT INTO \`user\` (email, password, active, activation_hash, role_id)
-           VALUES (?, ?, 1, ?, 1)`,
-          [email, hashedPassword, activationHash],
-          (err, result) => {
-
-            if (err) {
-              console.error('INSERT ERROR:', err);
-              return res.status(500).json({ message: err.message });
+          'UPDATE `user` SET refresh_token = ? WHERE id = ?',
+          [token, user.id],
+          (err2) => {
+            if (err2) {
+              console.error('TOKEN UPDATE ERROR:', err2);
+              return res.status(500).json({ message: err2.message });
             }
 
-            res.status(201).json({
-              message: 'User registered'
+            return res.status(200).json({
+              message: 'Login successful',
+              token,
+              user: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                role_id: user.role_id
+              }
             });
           }
         );
 
-      } catch (hashError) {
-        console.error('HASH ERROR:', hashError);
-        res.status(500).json({ message: 'Hash error' });
+      } catch (compareError) {
+        console.error('BCRYPT ERROR:', compareError);
+        return res.status(500).json({ message: 'Password check error' });
       }
     }
   );
