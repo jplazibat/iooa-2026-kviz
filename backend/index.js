@@ -438,7 +438,7 @@ app.post('/login', (req, res) => {
       }
 
       if (results.length === 0) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+        return res.status(401).json({ message: 'Invalid email' });
       }
 
       const user = results[0];
@@ -448,7 +448,7 @@ app.post('/login', (req, res) => {
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordMatch) {
-          return res.status(401).json({ message: 'Invalid credentials' });
+          return res.status(401).json({ message: 'Invalid password' });
         }
 
         // 3.  provjera da li je user aktivan

@@ -119,7 +119,7 @@ const onSubmit = async () => {
 
     $q.notify({
       type: 'negative',
-      message: err.response?.data?.message || 'Pogrešan email ili lozinka',
+      message: err.response?.data?.message || 'Greška na serveru, pokušajte ponovo kasnije.',
       position: 'top',
       timeout: 4000
     })
