@@ -93,7 +93,7 @@ export default defineComponent({
     return
   }
 
-  // ⏰ provjera isteka
+  // provjera isteka tokena
   if (Date.now() > Number(expiresAt)) {
     logout()
     return
@@ -103,6 +103,7 @@ export default defineComponent({
 }
 let logoutTimer = null
 
+// postavljanje auto logouta
 const startAutoLogout = () => {
   const expiresAt = localStorage.getItem("expiresAt")
   if (!expiresAt) return
@@ -123,12 +124,13 @@ const startAutoLogout = () => {
       localStorage.removeItem("user");
 
       isLoggedIn.value = false;
-$q.notify({
-    type: "positive",
-    message: "Uspješno ste se odjavili",
-    position: "top",
-    timeout: 2500,
-  });
+
+      $q.notify({
+          type: "positive",
+          message: "Uspješno ste se odjavili",
+          position: "top",
+          timeout: 2500,
+        });
       router.push("/");
     };
 
@@ -136,20 +138,20 @@ $q.notify({
     const toggleLeftDrawer = () => {
       leftDrawerOpen.value = !leftDrawerOpen.value;
     };
+// inicijalna provjera auth stanja i postavljanje auto logouta
+      onMounted(() => {
+      checkAuth()
+      startAutoLogout()
 
-    onMounted(() => {
-  checkAuth()
-  startAutoLogout()
-
-  window.addEventListener("storage", () => {
-    checkAuth()
-    startAutoLogout()
+      window.addEventListener("storage", () => {
+      checkAuth()
+      startAutoLogout()
   })
 })
-
-    onBeforeUnmount(() => {
-  window.removeEventListener("storage", checkAuth)
-  if (logoutTimer) clearTimeout(logoutTimer)
+      // cleanup
+      onBeforeUnmount(() => {
+      window.removeEventListener("storage", checkAuth)
+      if (logoutTimer) clearTimeout(logoutTimer)
 })
 
 
