@@ -122,7 +122,7 @@ const startAutoLogout = () => {
     const logout = () => {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-
+      localStorage.removeItem("expiresAt");
       isLoggedIn.value = false;
 
       $q.notify({
@@ -150,7 +150,10 @@ const startAutoLogout = () => {
 })
       // cleanup
       onBeforeUnmount(() => {
-      window.removeEventListener("storage", checkAuth)
+      window.removeEventListener("storage", () => {
+      checkAuth()
+      startAutoLogout()
+  })
       if (logoutTimer) clearTimeout(logoutTimer)
 })
 
