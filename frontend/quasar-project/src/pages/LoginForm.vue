@@ -93,7 +93,13 @@ const onSubmit = async () => {
     })
 
     //  spremi token
+    const expiresAt = Date.now() + 30 * 60 * 1000 // 30 minuta
+
     localStorage.setItem('token', res.data.token)
+    localStorage.setItem('expiresAt', expiresAt)
+    localStorage.setItem('user', JSON.stringify(res.data.user))
+
+
 
     //  user 
     localStorage.setItem('user', JSON.stringify(res.data.user))

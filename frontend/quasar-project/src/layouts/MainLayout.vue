@@ -61,7 +61,11 @@
 
 <script>
 import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
-import { useRouter } from "vue-router";//zvonimir
+import { useRouter } from "vue-router";
+import { useQuasar } from "quasar";
+
+
+
 const linksList = [
   {
     title: "Link test",
@@ -75,22 +79,56 @@ export default defineComponent({
 
   setup() {
     const router = useRouter();
-
+    const $q = useQuasar();
     const leftDrawerOpen = ref(false);
     const isLoggedIn = ref(false);
 
     // provjera auth stanja
     const checkAuth = () => {
-      isLoggedIn.value = !!localStorage.getItem("token");
-    };
+  const token = localStorage.getItem("token")
+  const expiresAt = localStorage.getItem("expiresAt")
 
-    //logout funkcija zvonimir
+  if (!token || !expiresAt) {
+    isLoggedIn.value = false
+    return
+  }
+
+  // ⏰ provjera isteka
+  if (Date.now() > Number(expiresAt)) {
+    logout()
+    return
+  }
+
+  isLoggedIn.value = true
+}
+let logoutTimer = null
+
+const startAutoLogout = () => {
+  const expiresAt = localStorage.getItem("expiresAt")
+  if (!expiresAt) return
+
+  const timeLeft = Number(expiresAt) - Date.now()
+
+  if (timeLeft <= 0) {
+    logout()
+  } else {
+    logoutTimer = setTimeout(logout, timeLeft)
+  }
+}
+
+
+    //logout funkcija 
     const logout = () => {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
       isLoggedIn.value = false;
-
+$q.notify({
+    type: "positive",
+    message: "Uspješno ste se odjavili",
+    position: "top",
+    timeout: 2500,
+  });
       router.push("/");
     };
 
@@ -100,15 +138,20 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      checkAuth();
+  checkAuth()
+  startAutoLogout()
 
-      //reagira na login/logout iz drugih komponenti
-      window.addEventListener("storage", checkAuth);
-    });
+  window.addEventListener("storage", () => {
+    checkAuth()
+    startAutoLogout()
+  })
+})
 
     onBeforeUnmount(() => {
-      window.removeEventListener("storage", checkAuth);
-    });
+  window.removeEventListener("storage", checkAuth)
+  if (logoutTimer) clearTimeout(logoutTimer)
+})
+
 
     return {
       essentialLinks: linksList,
