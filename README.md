@@ -2,3 +2,4 @@
 Kviz Biljne vrste
 Jure Plazibat
 Manuel Tauzer
+Patrik Skradski
