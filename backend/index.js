@@ -4,6 +4,21 @@ var bodyParser = require("body-parser");
 const dbConfig = require("./db.config.js");
 var mysql = require("mysql");
 const cors = require("cors");
+const knex = require('knex');
+
+app.use(cors());
+app.use(express.json());
+
+// INICIJALIZACIJA BAZE
+const db = knex({
+  client: 'mysql2',
+  connection: {
+    host: dbConfig.HOST,
+    user: dbConfig.USER,
+    password: dbConfig.PASSWORD,
+    database: dbConfig.DB
+  }
+});
 
 app.use(
   cors({
@@ -317,6 +332,25 @@ app.get('/pitanje/:id', (req, res) => {
       message: "Pitanje detalji.",
     });
   });
+});
+
+app.get('/api/PregledBiljaka', async (req, res) => {
+  try {
+    const biljke = await db('plant_species')
+      
+      .leftJoin('genus', 'plant_species.genus_id', 'genus.id')
+      
+      
+      .select(
+        'plant_species.*',        
+        'genus.name as genus_name' 
+      );
+
+    res.json(biljke);
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: 'Greška pri spajanju tablica' });
+  }
 });
 
 
