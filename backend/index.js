@@ -355,6 +355,48 @@ app.get('/api/PregledBiljaka', async (req, res) => {
 
 
 
+app.get('/api/PregledBotanskihPorodica', async (req, res) => {
+  try {
+    const obitelji = await db('botanical_family').select('*');
+    res.json(obitelji);
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: 'Greška pri dohvatu botaničkih obitelji' });
+  }
+});
+
+app.post('/api/botanical_family', async (req, res) => {
+  try {
+    const { croatian_name, latin_name } = req.body;
+    const [id] = await db('botanical_family').insert({ croatian_name, latin_name });
+    res.json({ id, croatian_name, latin_name });
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: 'Greška pri dodavanju porodice' });
+  }
+});
+
+app.put('/api/botanical_family/:id', async (req, res) => {
+  try {
+    const { croatian_name, latin_name } = req.body;
+    await db('botanical_family').where({ id: req.params.id }).update({ croatian_name, latin_name });
+    res.json({ id: req.params.id, croatian_name, latin_name });
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: 'Greška pri ažuriranju porodice' });
+  }
+});
+
+app.delete('/api/botanical_family/:id', async (req, res) => {
+  try {
+    await db('botanical_family').where({ id: req.params.id }).delete();
+    res.json({ success: true });
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: 'Greška pri brisanju porodice' });
+  }
+});
+
 app.listen(3000, function () {
   console.log("Node app is running on port 3000");
 });
