@@ -426,6 +426,56 @@ app.delete("/api/botanical_family/:id", async (req, res) => {
   }
 });
 
+//  UrediBiljku: dohvat jedne biljke po ID-u 
+app.get('/api/plant_species/:id', async (req, res) => {
+  try {
+    const biljka = await db('plant_species').where({ id: req.params.id }).first()
+    if (!biljka) return res.status(404).json({ error: 'Biljka nije pronađena' })
+    res.json(biljka)
+  } catch (error) {
+    res.status(500).json({ error: 'Greška pri dohvatu biljke' })
+  }
+})
+//  Pretraga biljke po nazivu 
+app.get('/api/pretraga_biljke', async (req, res) => {
+  try {
+    const naziv = req.query.naziv
+    const rezultati = await db('plant_species')
+      .where('croatian_name', 'like', `%${naziv}%`)
+      .orWhere('latin_name', 'like', `%${naziv}%`)
+      .select('id', 'croatian_name', 'latin_name')
+      .limit(10)
+    res.json(rezultati)
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: 'Greška pri pretrazi' })
+  }
+})
+
+// UrediBiljku: dohvat svih rodova 
+app.get('/api/genus', async (req, res) => {
+  try {
+    const rodovi = await db('genus').select('id', 'name', 'botanical_family_id');
+    res.json(rodovi);
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: 'Greška pri dohvatu rodova' });
+  }
+});
+
+//  UrediBiljku: spremi promjene biljke 
+app.put('/api/plant_species/:id', async (req, res) => {
+  try {
+    const { croatian_name, latin_name, synonym, description, genus_id } = req.body;
+    await db('plant_species')
+      .where({ id: req.params.id })
+      .update({ croatian_name, latin_name, synonym, description, genus_id });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: 'Greška pri ažuriranju biljke' });
+  }
+});
 app.listen(3000, function () {
   console.log("Node app is running on port 3000");
 });
