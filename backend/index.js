@@ -507,6 +507,20 @@ app.post("/api/dodajBiljku", async (req, res) => {
   }
 });
 //kraj dodavana
+app.delete("/api/obrisiBiljku/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await db("plant_species")
+      .where({ id })
+      .del();
+
+    res.json({ message: "Biljka uspješno obrisana" });
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: "Greška pri brisanju biljke" });
+  }
+});
 
 app.get("/api/PregledRodova", async (req, res) => {
   try {
