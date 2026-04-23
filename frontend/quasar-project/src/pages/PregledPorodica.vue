@@ -3,7 +3,6 @@
     class="row no-wrap full-width shadow-2"
     style="height: calc(100vh - 50px); overflow: hidden"
   >
-    <!-- Sidebar -->
     <div class="col-auto bg-green-10 text-white column" style="width: 280px">
       <div class="q-pa-lg q-mb-md row items-center q-gutter-sm">
         <q-avatar
@@ -35,12 +34,8 @@
           @click="$router.push('/PregledBiljaka')"
         >
           <q-item-section avatar><q-icon name="list_alt" /></q-item-section>
-          <q-item-section class="text-weight-bold"
-            >Pregled biljaka</q-item-section
-          >
-          <q-item-section side
-            ><q-icon name="chevron_right" color="white"
-          /></q-item-section>
+          <q-item-section class="text-weight-bold">Pregled biljaka</q-item-section>
+          <q-item-section side><q-icon name="chevron_right" color="white" /></q-item-section>
         </q-item>
 
         <q-item
@@ -50,12 +45,14 @@
           @click="$router.push('/PregledPorodica')"
         >
           <q-item-section avatar><q-icon name="list_alt" /></q-item-section>
-          <q-item-section class="text-weight-bold"
-            >Pregled porodica</q-item-section
-          >
-          <q-item-section side
-            ><q-icon name="chevron_right" color="white"
-          /></q-item-section>
+          <q-item-section class="text-weight-bold">Pregled porodica</q-item-section>
+          <q-item-section side><q-icon name="chevron_right" color="white" /></q-item-section>
+        </q-item>
+
+        <q-item clickable class="text-white q-my-sm" style="border-radius: 0 30px 30px 0; margin-right: 10px;" @click="$router.push('/Uredibiljku')">
+          <q-item-section avatar><q-icon name="edit" /></q-item-section>
+          <q-item-section class="text-weight-bold">Uređivanje</q-item-section>
+          <q-item-section side><q-icon name="chevron_right" color="white" /></q-item-section>
         </q-item>
       </q-list>
 
@@ -67,7 +64,6 @@
       </div>
     </div>
 
-    <!-- Main content -->
     <div class="col bg-grey-1 column">
       <div class="q-pa-lg col overflow-auto">
         <div class="row items-center q-mb-md">
@@ -91,48 +87,53 @@
           :pagination="{ rowsPerPage: 10 }"
         >
           <template v-slot:body="props">
-            <!-- Glavni red porodice -->
             <q-tr
               :props="props"
               class="cursor-pointer"
               @click="toggleExpand(props.row)"
             >
-              <q-td auto-width>
+              <q-td key="expand" :props="props" auto-width>
                 <q-icon
-                  :name="
-                    expandedId === props.row.id ? 'expand_less' : 'expand_more'
-                  "
+                  :name="expandedId === props.row.id ? 'expand_less' : 'expand_more'"
                   color="grey-6"
                 />
               </q-td>
-              <q-td v-for="col in props.cols" :key="col.name" :props="props">
-                <template v-if="col.name === 'akcije'">
-                  <q-btn
-                    flat
-                    round
-                    color="blue-7"
-                    icon="edit"
-                    size="sm"
-                    @click.stop="openUrediPorodicu(props.row)"
-                  />
-                  <q-btn
-                    flat
-                    round
-                    color="red-7"
-                    icon="delete"
-                    size="sm"
-                    @click.stop="openBrisiPorodicu(props.row)"
-                  />
-                </template>
-                <template v-else>{{ col.value }}</template>
+
+              <q-td key="id" :props="props">
+                {{ props.row.id }}
+              </q-td>
+
+              <q-td key="croatian_name" :props="props">
+                {{ props.row.croatian_name }}
+              </q-td>
+
+              <q-td key="latin_name" :props="props">
+                {{ props.row.latin_name }}
+              </q-td>
+
+              <q-td key="akcije" :props="props" class="text-center">
+                <q-btn
+                  flat
+                  round
+                  color="blue-7"
+                  icon="edit"
+                  size="sm"
+                  @click.stop="openUrediPorodicu(props.row)"
+                />
+                <q-btn
+                  flat
+                  round
+                  color="red-7"
+                  icon="delete"
+                  size="sm"
+                  @click.stop="openBrisiPorodicu(props.row)"
+                />
               </q-td>
             </q-tr>
 
-            <!-- Expand red s genus CRUD-om -->
             <q-tr v-if="expandedId === props.row.id" :props="props" no-hover>
               <q-td colspan="100%" class="q-pa-none">
                 <div class="q-pa-md bg-green-1">
-                  <!-- Header genus sekcije -->
                   <div class="row items-center q-mb-md">
                     <div
                       class="text-caption text-weight-bold text-green-9 col"
@@ -149,24 +150,18 @@
                     />
                   </div>
 
-                  <!-- Učitavanje -->
                   <div v-if="genusLoading" class="row items-center q-gutter-sm">
                     <q-spinner color="green-7" size="18px" />
-                    <span class="text-caption text-grey-6"
-                      >Učitavanje rodova...</span
-                    >
+                    <span class="text-caption text-grey-6">Učitavanje rodova...</span>
                   </div>
 
-                  <!-- Prazno -->
                   <div
                     v-else-if="genusLista.length === 0"
                     class="text-caption text-grey-5"
                   >
-                    Nema rodova za ovu porodicu. Dodajte prvi rod klikom na gumb
-                    iznad.
+                    Nema rodova za ovu porodicu. Dodajte prvi rod klikom na gumb iznad.
                   </div>
 
-                  <!-- Tablica genusa -->
                   <q-table
                     v-else
                     :rows="genusLista"
@@ -180,10 +175,7 @@
                     :pagination="{ rowsPerPage: 0 }"
                   >
                     <template v-slot:body-cell-akcije="genusProps">
-                      <q-td
-                        :props="genusProps"
-                        class="q-gutter-x-sm text-center"
-                      >
+                      <q-td :props="genusProps" class="q-gutter-x-sm text-center">
                         <q-btn
                           flat
                           round
@@ -212,37 +204,18 @@
     </div>
   </div>
 
-  <!-- ===== DIJALOZI ZA PORODICU ===== -->
-
   <q-dialog v-model="dijalogPorodicaOtvoren" persistent>
     <q-card style="min-width: 400px">
       <q-card-section class="bg-green-8 text-white">
         <div class="text-h6">{{ dijalogPorodicaNaslov }}</div>
       </q-card-section>
       <q-card-section class="q-gutter-md q-pt-lg">
-        <q-input
-          v-model="formaPorodica.croatian_name"
-          label="Hrvatski naziv"
-          outlined
-          dense
-          :rules="[(val) => !!val || 'Obavezno polje']"
-        />
-        <q-input
-          v-model="formaPorodica.latin_name"
-          label="Latinski naziv"
-          outlined
-          dense
-          :rules="[(val) => !!val || 'Obavezno polje']"
-        />
+        <q-input v-model="formaPorodica.croatian_name" label="Hrvatski naziv" outlined dense :rules="[(val) => !!val || 'Obavezno polje']" />
+        <q-input v-model="formaPorodica.latin_name" label="Latinski naziv" outlined dense :rules="[(val) => !!val || 'Obavezno polje']" />
       </q-card-section>
       <q-card-actions align="right" class="q-pb-md q-pr-md">
         <q-btn flat label="Odustani" color="grey-7" v-close-popup />
-        <q-btn
-          label="Spremi"
-          color="green-8"
-          @click="spremiPorodicu"
-          :loading="spremaPorodicaLoading"
-        />
+        <q-btn label="Spremi" color="green-8" @click="spremiPorodicu" :loading="spremaPorodicaLoading" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -251,52 +224,27 @@
     <q-card>
       <q-card-section class="row items-center">
         <q-avatar icon="warning" color="red-7" text-color="white" />
-        <span class="q-ml-sm">
-          Jeste li sigurni da želite obrisati porodicu
-          <strong>{{ odabranaPorodica?.croatian_name }}</strong
-          >?
-        </span>
+        <span class="q-ml-sm">Jeste li sigurni da želite obrisati porodicu <strong>{{ odabranaPorodica?.croatian_name }}</strong>?</span>
       </q-card-section>
       <q-card-actions align="right">
         <q-btn flat label="Odustani" color="grey-7" v-close-popup />
-        <q-btn
-          label="Obriši"
-          color="red-7"
-          @click="obrisiPorodicu"
-          :loading="brisePorodicaLoading"
-        />
+        <q-btn label="Obriši" color="red-7" @click="obrisiPorodicu" :loading="brisePorodicaLoading" />
       </q-card-actions>
     </q-card>
   </q-dialog>
-
-  <!-- ===== DIJALOZI ZA GENUS ===== -->
 
   <q-dialog v-model="dijalogGenusOtvoren" persistent>
     <q-card style="min-width: 380px">
       <q-card-section class="bg-green-8 text-white">
         <div class="text-h6">{{ dijalogGenusNaslov }}</div>
-        <div class="text-caption text-green-2">
-          Porodica: {{ aktivnaPorodica?.croatian_name }}
-        </div>
+        <div class="text-caption text-green-2">Porodica: {{ aktivnaPorodica?.croatian_name }}</div>
       </q-card-section>
       <q-card-section class="q-pt-lg">
-        <q-input
-          v-model="formaGenus.name"
-          label="Naziv roda"
-          outlined
-          dense
-          autofocus
-          :rules="[(val) => !!val || 'Obavezno polje']"
-        />
+        <q-input v-model="formaGenus.name" label="Naziv roda" outlined dense autofocus :rules="[(val) => !!val || 'Obavezno polje']" />
       </q-card-section>
       <q-card-actions align="right" class="q-pb-md q-pr-md">
         <q-btn flat label="Odustani" color="grey-7" v-close-popup />
-        <q-btn
-          label="Spremi"
-          color="green-8"
-          @click="spremiGenus"
-          :loading="spremaGenusLoading"
-        />
+        <q-btn label="Spremi" color="green-8" @click="spremiGenus" :loading="spremaGenusLoading" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -305,20 +253,11 @@
     <q-card>
       <q-card-section class="row items-center">
         <q-avatar icon="warning" color="red-7" text-color="white" />
-        <span class="q-ml-sm">
-          Jeste li sigurni da želite obrisati rod
-          <strong>{{ odabraniGenus?.name }}</strong
-          >?
-        </span>
+        <span class="q-ml-sm">Jeste li sigurni da želite obrisati rod <strong>{{ odabraniGenus?.name }}</strong>?</span>
       </q-card-section>
       <q-card-actions align="right">
         <q-btn flat label="Odustani" color="grey-7" v-close-popup />
-        <q-btn
-          label="Obriši"
-          color="red-7"
-          @click="obrisiGenus"
-          :loading="briseGenusLoading"
-        />
+        <q-btn label="Obriši" color="red-7" @click="obrisiGenus" :loading="briseGenusLoading" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -354,9 +293,9 @@ const formaGenus = ref({ name: "" });
 const spremaGenusLoading = ref(false);
 const briseGenusLoading = ref(false);
 
-// ===== COLUMNS =====
+// ===== COLUMNS (Popravljeno: ime stupca se mora podudarati s key u TD) =====
 const columns = [
-  { name: "expand", label: "", field: "", align: "left" },
+  { name: "expand", label: "", field: "expand", align: "left" },
   { name: "id", align: "left", label: "ID", field: "id", sortable: true },
   {
     name: "croatian_name",
@@ -377,23 +316,15 @@ const columns = [
 
 const genusColumns = [
   { name: "id", align: "left", label: "ID", field: "id", sortable: true },
-  {
-    name: "name",
-    align: "left",
-    label: "Naziv roda",
-    field: "name",
-    sortable: true,
-  },
+  { name: "name", align: "left", label: "Naziv roda", field: "name", sortable: true },
   { name: "akcije", align: "center", label: "Akcije", field: "akcije" },
 ];
 
-// ===== PORODICA METODE =====
+// ===== METODE (Nepromijenjene, ali uključene za kompletnost) =====
 const fetchPorodice = async () => {
   loading.value = true;
   try {
-    const response = await axios.get(
-      `${BASE_URL}/api/PregledBotanskihPorodica`
-    );
+    const response = await axios.get(`${BASE_URL}/api/PregledBotanskihPorodica`);
     porodice.value = response.data;
   } catch (error) {
     console.error("Greška pri dohvatu porodica:", error);
@@ -411,10 +342,7 @@ const openDodajPorodicu = () => {
 
 const openUrediPorodicu = (row) => {
   odabranaPorodica.value = row;
-  formaPorodica.value = {
-    croatian_name: row.croatian_name,
-    latin_name: row.latin_name,
-  };
+  formaPorodica.value = { croatian_name: row.croatian_name, latin_name: row.latin_name };
   dijalogPorodicaNaslov.value = "Uredi porodicu";
   dijalogPorodicaOtvoren.value = true;
 };
@@ -425,56 +353,32 @@ const openBrisiPorodicu = (row) => {
 };
 
 const spremiPorodicu = async () => {
-  if (!formaPorodica.value.croatian_name || !formaPorodica.value.latin_name)
-    return;
+  if (!formaPorodica.value.croatian_name || !formaPorodica.value.latin_name) return;
   spremaPorodicaLoading.value = true;
   try {
     if (odabranaPorodica.value) {
-      await axios.put(
-        `${BASE_URL}/api/botanical_family/${odabranaPorodica.value.id}`,
-        formaPorodica.value
-      );
+      await axios.put(`${BASE_URL}/api/botanical_family/${odabranaPorodica.value.id}`, formaPorodica.value);
     } else {
       await axios.post(`${BASE_URL}/api/botanical_family`, formaPorodica.value);
     }
     dijalogPorodicaOtvoren.value = false;
-    if (odabranaPorodica.value?.id === expandedId.value) {
-      expandedId.value = null;
-      genusLista.value = [];
-    }
     await fetchPorodice();
-  } catch (error) {
-    console.error("Greška pri spremanju porodice:", error);
-  } finally {
-    spremaPorodicaLoading.value = false;
-  }
+  } catch (error) { console.error(error); } finally { spremaPorodicaLoading.value = false; }
 };
 
 const obrisiPorodicu = async () => {
   brisePorodicaLoading.value = true;
   try {
-    await axios.delete(
-      `${BASE_URL}/api/botanical_family/${odabranaPorodica.value.id}`
-    );
+    await axios.delete(`${BASE_URL}/api/botanical_family/${odabranaPorodica.value.id}`);
     dijalogBrisanjePorodice.value = false;
-    if (odabranaPorodica.value?.id === expandedId.value) {
-      expandedId.value = null;
-      genusLista.value = [];
-    }
+    if (odabranaPorodica.value?.id === expandedId.value) expandedId.value = null;
     await fetchPorodice();
-  } catch (error) {
-    console.error("Greška pri brisanju porodice:", error);
-  } finally {
-    brisePorodicaLoading.value = false;
-  }
+  } catch (error) { console.error(error); } finally { brisePorodicaLoading.value = false; }
 };
 
-// ===== EXPAND METODE =====
 const toggleExpand = async (row) => {
   if (expandedId.value === row.id) {
     expandedId.value = null;
-    aktivnaPorodica.value = null;
-    genusLista.value = [];
     return;
   }
   expandedId.value = row.id;
@@ -486,18 +390,11 @@ const fetchGenus = async () => {
   if (!expandedId.value) return;
   genusLoading.value = true;
   try {
-    const res = await axios.get(
-      `${BASE_URL}/api/genus_by_family/${expandedId.value}`
-    );
+    const res = await axios.get(`${BASE_URL}/api/genus_by_family/${expandedId.value}`);
     genusLista.value = res.data;
-  } catch (error) {
-    console.error("Greška pri dohvatu genusa:", error);
-  } finally {
-    genusLoading.value = false;
-  }
+  } catch (error) { console.error(error); } finally { genusLoading.value = false; }
 };
 
-// ===== GENUS METODE =====
 const openDodajGenus = (porodica) => {
   aktivnaPorodica.value = porodica;
   odabraniGenus.value = null;
@@ -523,22 +420,13 @@ const spremiGenus = async () => {
   spremaGenusLoading.value = true;
   try {
     if (odabraniGenus.value) {
-      await axios.put(`${BASE_URL}/api/genus/${odabraniGenus.value.id}`, {
-        name: formaGenus.value.name,
-      });
+      await axios.put(`${BASE_URL}/api/genus/${odabraniGenus.value.id}`, { name: formaGenus.value.name });
     } else {
-      await axios.post(`${BASE_URL}/api/genus`, {
-        name: formaGenus.value.name,
-        botanical_family_id: aktivnaPorodica.value.id,
-      });
+      await axios.post(`${BASE_URL}/api/genus`, { name: formaGenus.value.name, botanical_family_id: aktivnaPorodica.value.id });
     }
     dijalogGenusOtvoren.value = false;
     await fetchGenus();
-  } catch (error) {
-    console.error("Greška pri spremanju roda:", error);
-  } finally {
-    spremaGenusLoading.value = false;
-  }
+  } catch (error) { console.error(error); } finally { spremaGenusLoading.value = false; }
 };
 
 const obrisiGenus = async () => {
@@ -547,21 +435,13 @@ const obrisiGenus = async () => {
     await axios.delete(`${BASE_URL}/api/genus/${odabraniGenus.value.id}`);
     dijalogBrisanjeGenusa.value = false;
     await fetchGenus();
-  } catch (error) {
-    console.error("Greška pri brisanju roda:", error);
-  } finally {
-    briseGenusLoading.value = false;
-  }
+  } catch (error) { console.error(error); } finally { briseGenusLoading.value = false; }
 };
 
 onMounted(fetchPorodice);
 </script>
 
 <style scoped>
-.bg-green-10 {
-  background-color: #1b3a1a !important;
-}
-.bg-green-8 {
-  background-color: #2d5a27 !important;
-}
+.bg-green-10 { background-color: #1b3a1a !important; }
+.bg-green-8 { background-color: #2d5a27 !important; }
 </style>

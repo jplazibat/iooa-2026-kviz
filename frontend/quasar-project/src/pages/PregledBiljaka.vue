@@ -31,6 +31,11 @@
             <q-icon name="chevron_right" color="white" />
           </q-item-section>
         </q-item>
+        <q-item clickable class=" text-white q-my-sm" style="border-radius: 0 30px 30px 0; margin-right: 10px;" @click="$router.push('/Uredibiljku')">
+          <q-item-section avatar><q-icon name="edit" /></q-item-section>
+          <q-item-section class="text-weight-bold">Uređivanje</q-item-section>
+          <q-item-section side><q-icon name="chevron_right" color="white" /></q-item-section>
+        </q-item>
 
 
       </q-list>
