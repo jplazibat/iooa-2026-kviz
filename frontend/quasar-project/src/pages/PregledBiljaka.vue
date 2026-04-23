@@ -19,7 +19,7 @@
           </q-item-section>
           <q-item-section class="text-weight-bold">Pregled biljaka</q-item-section>
           <q-item-section side>
-            <q-icon name="chevron_right" color="white" />
+           <q-icon name="chevron_right" color="white" />
           </q-item-section>
         </q-item>
         <q-item clickable class="text-white q-my-sm" style="border-radius: 0 30px 30px 0; margin-right: 10px;" @click="$router.push('/PregledPorodica')">
@@ -47,6 +47,19 @@
 
 
       <div class="q-pa-lg col overflow-auto">
+        <div class="row items-center q-mb-md">
+           <div class="text-h6 text-weight-bold col">
+              Pregled biljaka
+               </div>
+<div class="row items-center q-mb-md">
+  <q-btn
+  color="green-8"
+  icon="add"
+  label="Dodaj biljku"
+  @click="showDialog = true"
+/>
+</div>
+</div>
         <q-table
           :rows="biljke"
           :columns="columns"
@@ -76,6 +89,41 @@
       </div>
     </div>
   </div>
+  <q-dialog v-model="showDialog" persistent>
+  <q-card style="width: 500px; border-radius: 12px;" class="q-pa-lg">
+
+    <div class="text-h6 text-weight-bold q-mb-md">
+      Dodaj novu biljku
+    </div>
+
+    <q-form @submit="dodajBiljku" class="q-gutter-md">
+
+      <q-input v-model="form.croatian_name" label="Hrvatski naziv" outlined dense required />
+      <q-input v-model="form.latin_name" label="Latinski naziv" outlined dense required />
+      <q-input v-model="form.synonym" label="Sinonim" outlined dense />
+
+      <q-select
+        v-model="form.genus_id"
+        :options="genusi"
+        option-label="name"
+        option-value="id"
+        label="Rod"
+        emit-value
+        map-options
+        outlined dense required
+      />
+
+      <q-input v-model="form.description" label="Opis" type="textarea" outlined autogrow />
+
+      <div class="row justify-between q-mt-md">
+        <q-btn flat label="Odustani" color="grey" @click="showDialog = false" />
+        <q-btn type="submit" color="green-8" label="Spremi" />
+      </div>
+
+    </q-form>
+
+  </q-card>
+</q-dialog>
 </template>
 
 <script setup>
@@ -110,7 +158,52 @@ const fetchBiljke = async () => {
   }
 }
 
-onMounted(fetchBiljke)
+const showDialog = ref(false)
+
+const form = ref({
+  croatian_name: '',
+  latin_name: '',
+  synonym: '',
+  description: '',
+  genus_id: null
+})
+
+const genusi = ref([])
+
+const fetchGenus = async () => {
+  try {
+    const res = await axios.get('http://localhost:3000/api/genus')
+    genusi.value = res.data
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const dodajBiljku = async () => {
+  try {
+    await axios.post('http://localhost:3000/api/dodajBiljku', form.value)
+
+    showDialog.value = false
+
+    // reset forme
+    form.value = {
+      croatian_name: '',
+      latin_name: '',
+      synonym: '',
+      description: '',
+      genus_id: null
+    }
+
+    fetchBiljke() // refresh tablice
+
+  } catch (err) {
+    console.error(err)
+  }
+}
+onMounted(() => {
+  fetchBiljke()
+  fetchGenus()
+})
 </script>
 
 <style scoped>

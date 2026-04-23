@@ -480,6 +480,34 @@ app.listen(3000, function () {
   console.log("Node app is running on port 3000");
 });
 
+//Dodavanje biljke admin dio
+
+app.post("/api/dodajBiljku", async (req, res) => {
+  const {
+    croatian_name,
+    latin_name,
+    synonym,
+    description,
+    genus_id
+  } = req.body;
+
+  try {
+    await db("plant_species").insert({
+      croatian_name,
+      latin_name,
+      synonym,
+      description,
+      genus_id
+    });
+
+    res.json({ message: "Biljka uspješno dodana" });
+  } catch (error) {
+    console.error("SQL Greška:", error);
+    res.status(500).json({ error: "Greška pri unosu biljke" });
+  }
+});
+//kraj dodavana
+
 app.get("/api/PregledRodova", async (req, res) => {
   try {
     const genus = await db("genus").select("*");
