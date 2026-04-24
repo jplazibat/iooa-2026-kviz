@@ -13,6 +13,7 @@
 
           <span>
             {{ state.trueFalseMode ? state.trueFalsePitanje : state.pitanje }}
+            <strong v-if="state.praznina.aktivan"> ________ ?</strong>
           </span>
 
           <span class="tezina"> (Težina: {{ state.tezina }}) </span>
@@ -24,14 +25,29 @@
 
     <!-- ODGOVORI -->
     <div class="q-pa-md odgovori">
-      <q-radio
-        v-for="odgovor in state.odgovori"
-        :key="odgovor.id"
-        v-model.number="state.odabraniOdgovor"
-        :val="odgovor.id"
-        :label="getLabel(odgovor)"
-        color="teal"
-      />
+      <!-- Postojeći radio odgovori (MCQ i True/False) -->
+      <template v-if="!state.praznina.aktivan">
+        <q-radio
+          v-for="odgovor in state.odgovori"
+          :key="odgovor.id"
+          v-model.number="state.odabraniOdgovor"
+          :val="odgovor.id"
+          :label="getLabel(odgovor)"
+          color="teal"
+        />
+      </template>
+
+      <!-- Novi tip: popunjavanje praznine -->
+      <template v-else>
+        <q-input
+          v-model="state.praznina.uneseniOdgovor"
+          outlined
+          label="Unesite odgovor"
+          :disable="state.praznina.odgovorPotvrden"
+          @keyup.enter="checkAnswer"
+          style="max-width: 400px"
+        />
+      </template>
     </div>
 
     <!-- BUTTONS -->
@@ -77,7 +93,7 @@
           </div>
 
           <!-- MCQ -->
-          <div v-else>
+          <div v-else-if="!state.praznina.aktivan">
             <div v-if="state.lastCorrect">TOČNO</div>
 
             <div v-else>
@@ -85,6 +101,17 @@
               <div class="q-mt-sm">
                 Točan odgovor je:
                 <b>{{ state.tocanOdgovor.latin_name }}</b>
+              </div>
+            </div>
+          </div>
+
+          <!-- PRAZNINA -->
+          <div v-else>
+            <div v-if="state.lastCorrect">TOČNO</div>
+            <div v-else>
+              NETOČNO
+              <div class="q-mt-sm">
+                Točan odgovor je: <b>{{ state.praznina.tocniOdgovor }}</b>
               </div>
             </div>
           </div>
@@ -154,6 +181,13 @@ export default {
       tezina: 1,
 
       lastCorrect: false,
+
+      praznina: {
+        aktivan: false,
+        uneseniOdgovor: "",
+        tocniOdgovor: "",
+        odgovorPotvrden: false,
+      },
     });
 
     onMounted(async () => {
@@ -170,8 +204,25 @@ export default {
       state.tezina = Math.floor(Math.random() * 5) + 1;
       state.trueFalseMode = Math.random() < 0.35;
 
-      state.pitanje =
-        "Koji je latinski naziv za " + state.plant.croatian_name + "?";
+// Nasumično aktiviraj tip praznine (~33% šansa, samo ako nije true/false)
+state.praznina.aktivan = !state.trueFalseMode && Math.random() < 0.33;
+state.praznina.uneseniOdgovor = "";
+state.praznina.odgovorPotvrden = false;
+
+if (state.praznina.aktivan) {
+  const obrnuto = Math.random() < 0.5;
+
+  if (obrnuto) {
+    state.pitanje = "Hrvatski naziv za " + state.plant.latin_name + " je";
+    state.praznina.tocniOdgovor = state.plant.croatian_name;
+  } else {
+    state.pitanje = "Latinski naziv za " + state.plant.croatian_name + " je";
+    state.praznina.tocniOdgovor = state.plant.latin_name;
+  }
+} else {
+  state.pitanje =
+    "Koji je latinski naziv za " + state.plant.croatian_name + "?";
+}
 
       await setupTrueFalse();
       await loadAnswers();
@@ -269,6 +320,24 @@ export default {
 
     // ================= CHECK =================
     function checkAnswer() {
+      // Provjera za tip praznine
+      if (state.praznina.aktivan) {
+        const uneseno = state.praznina.uneseniOdgovor.trim().toLowerCase();
+        const tocno = state.praznina.tocniOdgovor.trim().toLowerCase();
+        state.lastCorrect = uneseno === tocno;
+        state.praznina.odgovorPotvrden = true;
+
+        if (state.lastCorrect) {
+          state.brojTocnih++;
+          state.bodovi += state.tezina;
+        } else {
+          state.brojNetocnih++;
+        }
+
+        state.alert = true;
+        return;
+      }
+
       if (state.odabraniOdgovor === null) return;
 
       let isCorrect = false;
