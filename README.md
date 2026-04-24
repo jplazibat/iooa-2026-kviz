@@ -2,3 +2,4 @@
 
 Kviz Biljne vrste
 -Fran Gunja,
+-Goran Borevac
