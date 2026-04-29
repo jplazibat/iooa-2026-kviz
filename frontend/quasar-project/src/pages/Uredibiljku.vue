@@ -133,8 +133,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { useRoute } from 'vue-router'   // ← DODAJ
 
 const BASE = 'http://localhost:3000'
+const route = useRoute()
 
 const odabranaBiljka    = ref(null)
 const rezultatiPretrage = ref([])
@@ -186,6 +188,9 @@ onMounted(async () => {
     axios.get(`${BASE}/api/PregledBotanskihPorodica`)
   ])
   rodovi.value = r.data; porodice.value = p.data
+
+  const { id, croatian_name, latin_name } = route.query
+  if (id) ucitajBiljku({ id, croatian_name, latin_name })
 })
 </script>
 <style scoped>

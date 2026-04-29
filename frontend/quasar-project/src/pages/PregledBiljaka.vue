@@ -74,7 +74,8 @@
           <template v-slot:body-cell-akcije="props">
             <q-td :props="props" class="text-center q-gutter-sm">
 
-              <q-btn flat round color="blue-7" icon="edit" size="sm" />
+              <q-btn flat round color="blue-7" icon="edit" size="sm"
+              @click="$router.push({ path: '/Uredibiljku', query: { id: props.row.id, croatian_name: props.row.croatian_name, latin_name: props.row.latin_name } })" />
 
               <q-btn
                 flat
