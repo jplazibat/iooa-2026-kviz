@@ -9,11 +9,15 @@
 
   <div class="grid">
   <div class="card" v-for="img in images" :key="img.id">
-    <img :src="img.image_url" class="real-image" />
+    <img 
+  :src="img.image_url" 
+  class="real-image"
+  @error="e => e.target.src='https://via.placeholder.com/120'"
+/>
 
     <div class="actions">
       <span>✏️</span>
-      <span>🗑️</span>
+      <span @click="deleteImage(img.id)">🗑️</span>
     </div>
   </div>
 </div>
@@ -34,6 +38,12 @@ async function loadImages() {
 onMounted(() => {
   loadImages()
 })
+
+
+async function deleteImage(id) {
+  await axios.delete(`http://localhost:3000/image/${id}`)
+  loadImages() // refresh liste
+}
 </script>
 
 <style>

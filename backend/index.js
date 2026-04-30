@@ -58,6 +58,8 @@ app.get("/botanical_family", (request, response) => {
   });
 });
 
+
+// api za ucitavanje slika 
 app.get("/images", (req, res) => {
   dbConn.query("SELECT id, image_url FROM image", (error, results) => {
     if (error) throw error;
@@ -70,6 +72,19 @@ app.get("/images", (req, res) => {
 });
 
 
+// api za brisanje slika
+app.delete("/image/:id", (req, res) => {
+  let image_id = req.params.id;
+
+  dbConn.query("DELETE FROM image WHERE id=?", image_id, (error, results) => {
+    if (error) throw error;
+
+    res.send({
+      error: false,
+      message: "Image deleted",
+    });
+  });
+});
 
 
 
