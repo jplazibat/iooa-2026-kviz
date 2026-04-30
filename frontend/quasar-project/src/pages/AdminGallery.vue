@@ -8,8 +8,8 @@
     </div>
 
   <div class="grid">
-  <div class="card" v-for="img in images" :key="img">
-    <img :src="img" class="real-image" />
+  <div class="card" v-for="img in images" :key="img.id">
+    <img :src="img.image_url" class="real-image" />
 
     <div class="actions">
       <span>✏️</span>
@@ -27,23 +27,10 @@ import axios from 'axios'
 const images = ref([])
 
 async function loadImages() {
-  images.value = []
-
-  // probamo ID-eve 1–10
-  for (let i = 1; i <= 20; i++) {
-    try {
-      const res = await axios.get(`http://localhost:3000/image/${i}`)
-
-      if (res.data.data) {
-        images.value.push(res.data.data.image_url)
-      }
-    } catch (e) {
-      // ignoriramo greške
-    }
-  }
+  const res = await axios.get("http://localhost:3000/images")
+  images.value = res.data.data
 }
 
-// automatski poziv kad se stranica učita
 onMounted(() => {
   loadImages()
 })

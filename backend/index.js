@@ -42,6 +42,10 @@ app.get("/plant_species", (request, response) => {
   });
 });
 
+
+
+
+
 // Retrieve all botanical families
 app.get("/botanical_family", (request, response) => {
   dbConn.query("SELECT * FROM botanical_family", (error, results) => {
@@ -53,6 +57,23 @@ app.get("/botanical_family", (request, response) => {
     });
   });
 });
+
+app.get("/images", (req, res) => {
+  dbConn.query("SELECT id, image_url FROM image", (error, results) => {
+    if (error) throw error;
+
+    res.send({
+      error: false,
+      data: results,
+    });
+  });
+});
+
+
+
+
+
+
 
 // Retrieve plant_species with id
 app.get("/plant_species/:id", (request, response) => {
