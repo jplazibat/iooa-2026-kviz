@@ -87,6 +87,39 @@ app.delete("/image/:id", (req, res) => {
 });
 
 
+// API za dodavanje slike
+app.post("/image", (req, res) => {
+  console.log("POST HIT:", req.body);
+
+  const { name, image_url } = req.body;
+
+  if (!image_url) {
+    return res.status(400).send({
+      error: true,
+      message: "image_url is required",
+    });
+  }
+
+  dbConn.query(
+  "INSERT INTO image (name, image_url, source) VALUES (?, ?, ?)",
+  [name, image_url, "admin"],
+    (error, results) => {
+      if (error) {
+        console.error("SQL ERROR:", error);
+        return res.status(500).send({
+          error: true,
+          message: "DB error",
+        });
+      }
+
+      res.send({
+        error: false,
+        message: "Image added",
+        id: results.insertId,
+      });
+    }
+  );
+});
 
 
 
