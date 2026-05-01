@@ -48,15 +48,7 @@
         color="white"
         text-color="black"
         label="Prihvati i završi"
-        @click="
-          if (state.odabraniOdgovor === state.tocanOdgovor.id) {
-            state.brojTocnih += 1;
-            state.bodovi += state.tezina; // Dodaj bodove za točan odgovor
-          } else {
-            state.brojNetocnih += 1;
-          }
-          state.zavrsniPopup = true;
-        "
+        @click="handleFinish"
         disabled
       />
       <q-btn
@@ -157,7 +149,8 @@
 <script>
 import { onMounted, reactive } from "vue";
 import axios from "axios";
-
+import { useQuasar } from "quasar";
+import { useRouter } from 'vue-router'
 var clicks = 1; // brojevi idu redom, ne ponavljaju se
 
 export default {
@@ -176,7 +169,9 @@ export default {
       alert: false,
       zavrsniPopup: false,
       tezina: 1, //tezina
-    });
+    })
+     const $q = useQuasar()
+     const router = useRouter();
 
     onMounted(async () => {
       await randomPlant();
@@ -189,6 +184,66 @@ export default {
       await getRandomBotanicalPlant();
       await getImage();
     }
+
+    // Funkcija za završetak kviza i spremanje rezultata
+async function handleFinish() {
+  // logika bodova
+  if (state.odabraniOdgovor === state.tocanOdgovor.id) {
+    state.brojTocnih += 1;
+    state.bodovi += state.tezina;
+  } else {
+    state.brojNetocnih += 1;
+  }
+
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (token && user) {
+    try {
+      await axios.post("http://localhost:3000/save-score", {
+        userId: user.id,
+        score: state.bodovi,
+      });
+
+      //  SUCCESS NOTIFY
+      $q.notify({
+        type: "positive",
+        message: "Rezultati su spremljeni u bazu!",
+        position: "top",
+        timeout: 2500,
+      });
+
+    } catch (err) {
+      console.error("Greška kod spremanja bodova:", err);
+
+      $q.notify({
+        type: "negative",
+        message: "Greška pri spremanju rezultata",
+        position: "top",
+        timeout: 3000,
+      });
+    }
+  } else {
+    //  USER NIJE LOGIRAN
+   $q.notify({
+  type: "warning",
+  message: "Prijavite se kako bi se rezultati spremili!",
+  actions: [
+    {
+      label: "LOGIN",
+      color: "white",
+      handler: () => {
+        router.push("/login");
+      },
+    },
+  ],
+});
+  }
+
+  // popup kao i prije
+  state.zavrsniPopup = true;
+}
+
 
     async function getImage() {
       const json = await axios.get(
@@ -352,6 +407,7 @@ export default {
       getRandomBotanicalPlant,
       getCorrectAnswerFromBotanicalFamily,
       handleClose,
+      handleFinish,
     };
   },
 
