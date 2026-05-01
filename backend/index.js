@@ -489,7 +489,83 @@ app.post('/login', (req, res) => {
     }
   );
 });
+//spremanje rezultata kviza u bazu
+app.post('/save-score', (req, res) => {
+  const { userId, score } = req.body;
 
+  if (!userId || score == null) {
+    return res.status(400).json({ message: 'Missing data' });
+  }
+
+  dbConn.query(
+    'INSERT INTO rezultati (user_id, rezultat,vrijeme, timestamp) VALUES (?, ?, 30, current_timestamp())',
+    [userId, score],
+    (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'DB error' });
+      }
+      console.log('Rezultat pohranjen');
+      res.json({ message: 'Rezultat pohranjen' });
+    }
+  );
+});
+
+// dohvat statistike i povijesti rezultata za određenog usera
+app.get('/user-stats/:id', (req, res) => {
+  const userId = req.params.id;
+  const range = req.query.range || 'all';
+
+  let dateFilter = '';
+
+  if (range === 'today') {
+    dateFilter = 'AND DATE(timestamp) = CURDATE()';
+  }
+
+  if (range === 'week') {
+    dateFilter = 'AND YEARWEEK(timestamp, 1) = YEARWEEK(CURDATE(), 1)';
+  }
+
+  if (range === 'month') {
+    dateFilter = `
+      AND MONTH(timestamp) = MONTH(CURDATE())
+      AND YEAR(timestamp) = YEAR(CURDATE())
+    `;
+  }
+
+  const statsQuery = `
+    SELECT
+      COUNT(*) AS total_games,
+      MAX(rezultat) AS best_score,
+      AVG(rezultat) AS avg_score,
+      SUM(rezultat) AS total_points,
+      MAX(timestamp) AS last_played
+    FROM rezultati
+    WHERE user_id = ?
+    ${dateFilter}
+  `;
+
+  dbConn.query(statsQuery, [userId], (err, stats) => {
+    if (err) return res.status(500).json({ message: err.message });
+
+    const historyQuery = `
+      SELECT rezultat, timestamp as created_at
+      FROM rezultati
+      WHERE user_id = ?
+      ${dateFilter}
+      ORDER BY timestamp asc
+    `;
+
+    dbConn.query(historyQuery, [userId], (err2, history) => {
+      if (err2) return res.status(500).json({ message: err2.message });
+
+      res.json({
+        stats: stats[0],
+        history
+      });
+    });
+  });
+});
 
 
 
