@@ -76,18 +76,32 @@
 
     <!-- ALERT -->
     <q-dialog v-model="state.alert" persistent>
-      <q-card>
+      <q-card
+        :class="
+          state.trueFalseMode
+            ? state.lastCorrect
+              ? 'bg-positive text-white'
+              : 'bg-negative text-white'
+            : ''
+        "
+      >
         <!-- ONLY ONE RESULT (NO DUPLICATES) -->
         <q-card-section class="q-pt-none">
           <!-- TRUE / FALSE -->
           <div v-if="state.trueFalseMode">
-            <div v-if="state.lastCorrect">TOČNO</div>
+            <div v-if="state.lastCorrect" class="text-h6 q-mt-sm">✓ TOČNO</div>
 
             <div v-else>
-              NETOČNO
+              <div class="text-h6 q-mt-sm">✗ NETOČNO</div>
               <div class="q-mt-sm">
                 Biljka sa slike je:
                 <b>{{ state.plant.croatian_name }}</b>
+              </div>
+              <div class="q-mt-xs">
+                Latinski naziv: <b>{{ state.plant.latin_name }}</b>
+              </div>
+              <div class="q-mt-xs" v-if="state.trueFalsePorodica">
+                Porodica: <b>{{ state.trueFalsePorodica }}</b>
               </div>
             </div>
           </div>
@@ -122,7 +136,7 @@
           <q-btn
             flat
             label="OK"
-            color="primary"
+            :color="state.trueFalseMode ? 'white' : 'primary'"
             @click="nextQuestion"
             v-close-popup
           />
@@ -181,6 +195,7 @@ export default {
       tezina: 1,
 
       lastCorrect: false,
+      trueFalsePorodica: "",
 
       praznina: {
         aktivan: false,
@@ -204,25 +219,26 @@ export default {
       state.tezina = Math.floor(Math.random() * 5) + 1;
       state.trueFalseMode = Math.random() < 0.35;
 
-// Nasumično aktiviraj tip praznine (~33% šansa, samo ako nije true/false)
-state.praznina.aktivan = !state.trueFalseMode && Math.random() < 0.33;
-state.praznina.uneseniOdgovor = "";
-state.praznina.odgovorPotvrden = false;
+      // Nasumično aktiviraj tip praznine (~33% šansa, samo ako nije true/false)
+      state.praznina.aktivan = !state.trueFalseMode && Math.random() < 0.33;
+      state.praznina.uneseniOdgovor = "";
+      state.praznina.odgovorPotvrden = false;
 
-if (state.praznina.aktivan) {
-  const obrnuto = Math.random() < 0.5;
+      if (state.praznina.aktivan) {
+        const obrnuto = Math.random() < 0.5;
 
-  if (obrnuto) {
-    state.pitanje = "Hrvatski naziv za " + state.plant.latin_name + " je";
-    state.praznina.tocniOdgovor = state.plant.croatian_name;
-  } else {
-    state.pitanje = "Latinski naziv za " + state.plant.croatian_name + " je";
-    state.praznina.tocniOdgovor = state.plant.latin_name;
-  }
-} else {
-  state.pitanje =
-    "Koji je latinski naziv za " + state.plant.croatian_name + "?";
-}
+        if (obrnuto) {
+          state.pitanje = "Hrvatski naziv za " + state.plant.latin_name + " je";
+          state.praznina.tocniOdgovor = state.plant.croatian_name;
+        } else {
+          state.pitanje =
+            "Latinski naziv za " + state.plant.croatian_name + " je";
+          state.praznina.tocniOdgovor = state.plant.latin_name;
+        }
+      } else {
+        state.pitanje =
+          "Koji je latinski naziv za " + state.plant.croatian_name + "?";
+      }
 
       await setupTrueFalse();
       await loadAnswers();
@@ -230,6 +246,7 @@ if (state.praznina.aktivan) {
     }
 
     // ================= TRUE/FALSE =================
+
     async function setupTrueFalse() {
       if (!state.trueFalseMode) return;
 
@@ -253,6 +270,15 @@ if (state.praznina.aktivan) {
         state.trueFalseCorrect = 0;
 
         state.trueFalsePitanje = "Biljka sa slike je: " + wrong.croatian_name;
+      }
+
+      try {
+        const porodicaRes = await axios.get(
+          `http://localhost:3000/botanical_family_plant_species/${state.plant.id}`
+        );
+        state.trueFalsePorodica = porodicaRes.data.data?.croatian_name || "";
+      } catch (e) {
+        state.trueFalsePorodica = "";
       }
     }
 
@@ -366,6 +392,10 @@ if (state.praznina.aktivan) {
 
     // ================= NEXT =================
     async function nextQuestion() {
+      if (state.questionNumber >= 10) {
+        state.zavrsniPopup = true;
+        return;
+      }
       state.questionNumber++;
       await loadQuestion();
     }
