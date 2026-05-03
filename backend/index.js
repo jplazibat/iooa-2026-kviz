@@ -61,7 +61,7 @@ app.get("/botanical_family", (request, response) => {
 
 // api za ucitavanje slika 
 app.get("/images", (req, res) => {
-  dbConn.query("SELECT id, name, image_url FROM image", (error, results) => {
+  dbConn.query("SELECT id, name, image_url, description FROM image", (error, results) => {
     if (error) throw error;
 
     res.send({
@@ -90,7 +90,7 @@ app.delete("/image/:id", (req, res) => {
 // api za uredivanje slika
 app.put("/image/:id", (req, res) => {
   const image_id = req.params.id;
-  const { name, image_url } = req.body;
+  const { name, image_url, description } = req.body;
 
   if (!image_url) {
     return res.status(400).send({
@@ -100,8 +100,8 @@ app.put("/image/:id", (req, res) => {
   }
 
   dbConn.query(
-    "UPDATE image SET name=?, image_url=? WHERE id=?",
-    [name, image_url, image_id],
+    "UPDATE image SET name=?, image_url=?, description=? WHERE id=?",
+    [name, image_url, description, image_id],
     (error, results) => {
       if (error) {
         console.error("SQL ERROR:", error);
@@ -125,7 +125,7 @@ app.put("/image/:id", (req, res) => {
 app.post("/image", (req, res) => {
   console.log("POST HIT:", req.body);
 
-  const { name, image_url } = req.body;
+  const { name, image_url, description } = req.body;
 
   if (!image_url) {
     return res.status(400).send({
@@ -135,8 +135,8 @@ app.post("/image", (req, res) => {
   }
 
   dbConn.query(
-  "INSERT INTO image (name, image_url, source) VALUES (?, ?, ?)",
-  [name, image_url, "admin"],
+  "INSERT INTO image (name, image_url, description, source) VALUES (?, ?, ?, ?)",
+  [name, image_url, description, "admin"],
     (error, results) => {
       if (error) {
         console.error("SQL ERROR:", error);

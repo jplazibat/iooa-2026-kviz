@@ -3,13 +3,7 @@
     <h3>Galerija slika</h3>
 
    <div class="top-bar">
-    
-  <input v-model="newImageUrl" placeholder="Unesi URL slike" />
-  <button @click="addImage">+ Dodaj sliku</button>
-</div>
-
-<div class="top-bar2">
-<input v-model="newImageName" placeholder="Unesi ime slike" />
+  <q-btn color="primary" icon="add" label="Dodaj sliku" @click="openAddDialog" />
 </div>
 
   <div class="grid">
@@ -36,6 +30,13 @@
     <q-card-section class="edit-fields">
       <q-input v-model="editImageName" label="Ime slike" outlined dense />
       <q-input v-model="editImageUrl" label="URL slike" outlined dense />
+      <q-input
+        v-model="editImageDescription"
+        label="Opis slike"
+        outlined
+        dense
+        type="textarea"
+      />
 
       <img
         v-if="editImageUrl"
@@ -48,6 +49,38 @@
     <q-card-actions align="right">
       <q-btn flat label="Odustani" color="primary" v-close-popup />
       <q-btn label="Spremi" color="primary" @click="updateImage" />
+    </q-card-actions>
+  </q-card>
+</q-dialog>
+
+<q-dialog v-model="addDialogOpen" persistent>
+  <q-card class="edit-dialog">
+    <q-card-section>
+      <div class="text-h6">Dodaj sliku</div>
+    </q-card-section>
+
+    <q-card-section class="edit-fields">
+      <q-input v-model="newImageName" label="Ime slike" outlined dense />
+      <q-input v-model="newImageUrl" label="URL slike" outlined dense />
+      <q-input
+        v-model="newImageDescription"
+        label="Opis slike"
+        outlined
+        dense
+        type="textarea"
+      />
+
+      <img
+        v-if="newImageUrl"
+        :src="newImageUrl"
+        class="edit-preview"
+        @error="e => e.target.src='https://via.placeholder.com/160'"
+      />
+    </q-card-section>
+
+    <q-card-actions align="right">
+      <q-btn flat label="Odustani" color="primary" @click="closeAddDialog" />
+      <q-btn label="Dodaj" color="primary" @click="addImage" />
     </q-card-actions>
   </q-card>
 </q-dialog>
@@ -64,10 +97,13 @@ const $q = useQuasar()
 
 const newImageName = ref("")
 const newImageUrl = ref("")
+const newImageDescription = ref("")
+const addDialogOpen = ref(false)
 const editDialogOpen = ref(false)
 const editImageId = ref(null)
 const editImageName = ref("")
 const editImageUrl = ref("")
+const editImageDescription = ref("")
 
 async function loadImages() {
   const res = await axios.get("http://localhost:3000/images")
@@ -102,7 +138,22 @@ function openEditDialog(img) {
   editImageId.value = img.id
   editImageName.value = img.name || ""
   editImageUrl.value = img.image_url || ""
+  editImageDescription.value = img.description || ""
   editDialogOpen.value = true
+}
+
+function openAddDialog() {
+  newImageName.value = ""
+  newImageUrl.value = ""
+  newImageDescription.value = ""
+  addDialogOpen.value = true
+}
+
+function closeAddDialog() {
+  addDialogOpen.value = false
+  newImageName.value = ""
+  newImageUrl.value = ""
+  newImageDescription.value = ""
 }
 
 async function updateImage() {
@@ -112,6 +163,7 @@ async function updateImage() {
     await axios.put(`http://localhost:3000/image/${editImageId.value}`, {
       name: editImageName.value,
       image_url: editImageUrl.value,
+      description: editImageDescription.value,
     })
 
     editDialogOpen.value = false
@@ -136,10 +188,10 @@ async function addImage() {
     await axios.post("http://localhost:3000/image", {
         name: newImageName.value,
       image_url: newImageUrl.value,
+      description: newImageDescription.value,
     })
 
-    newImageUrl.value = "" // očisti input
-    newImageName.value = ""
+    closeAddDialog()
     loadImages() // refresh grid
   } catch (e) {
     console.error("Error adding image:", e)
@@ -158,7 +210,7 @@ async function addImage() {
 
 .top-bar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-bottom: 20px;
 }
 
@@ -201,16 +253,6 @@ async function addImage() {
   gap: 10px;
   font-size: 18px;
   cursor: pointer;
-}
-
-.top-bar input {
-  padding: 5px;
-  margin-right: 10px;
-}
-
-.top-bar2 input {
-  padding: 5px;
-  margin-right: 10px;
 }
 
 .top-bar {
