@@ -21,22 +21,53 @@
 />
 
     <div class="actions">
-      <span>✏️</span>
-      <span @click="deleteImage(img.id)">🗑️</span>
+      <span @click="openEditDialog(img)">✏️</span>
+      <span @click="confirmDeleteImage(img.id)">🗑️</span>
     </div>
   </div>
 </div>
+
+<q-dialog v-model="editDialogOpen" persistent>
+  <q-card class="edit-dialog">
+    <q-card-section>
+      <div class="text-h6">Uredi sliku</div>
+    </q-card-section>
+
+    <q-card-section class="edit-fields">
+      <q-input v-model="editImageName" label="Ime slike" outlined dense />
+      <q-input v-model="editImageUrl" label="URL slike" outlined dense />
+
+      <img
+        v-if="editImageUrl"
+        :src="editImageUrl"
+        class="edit-preview"
+        @error="e => e.target.src='https://via.placeholder.com/160'"
+      />
+    </q-card-section>
+
+    <q-card-actions align="right">
+      <q-btn flat label="Odustani" color="primary" v-close-popup />
+      <q-btn label="Spremi" color="primary" @click="updateImage" />
+    </q-card-actions>
+  </q-card>
+</q-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { useQuasar } from 'quasar'
 
 const images = ref([])
+const $q = useQuasar()
 
 const newImageName = ref("")
 const newImageUrl = ref("")
+const editDialogOpen = ref(false)
+const editImageId = ref(null)
+const editImageName = ref("")
+const editImageUrl = ref("")
 
 async function loadImages() {
   const res = await axios.get("http://localhost:3000/images")
@@ -47,6 +78,48 @@ onMounted(() => {
   loadImages()
 })
 
+
+function confirmDeleteImage(id) {
+  $q.dialog({
+    title: 'Brisanje slike',
+    message: 'Jeste li sigurni da zelite izbrisati ovu sliku?',
+    cancel: true,
+    persistent: true,
+    ok: {
+      label: 'Izbrisi',
+      color: 'negative'
+    },
+    cancel: {
+      label: 'Odustani',
+      color: 'primary'
+    }
+  }).onOk(() => {
+    deleteImage(id)
+  })
+}
+
+function openEditDialog(img) {
+  editImageId.value = img.id
+  editImageName.value = img.name || ""
+  editImageUrl.value = img.image_url || ""
+  editDialogOpen.value = true
+}
+
+async function updateImage() {
+  if (!editImageId.value || !editImageUrl.value) return
+
+  try {
+    await axios.put(`http://localhost:3000/image/${editImageId.value}`, {
+      name: editImageName.value,
+      image_url: editImageUrl.value,
+    })
+
+    editDialogOpen.value = false
+    loadImages()
+  } catch (e) {
+    console.error("Error updating image:", e)
+  }
+}
 
 async function deleteImage(id) {
   await axios.delete(`http://localhost:3000/image/${id}`)
@@ -66,6 +139,7 @@ async function addImage() {
     })
 
     newImageUrl.value = "" // očisti input
+    newImageName.value = ""
     loadImages() // refresh grid
   } catch (e) {
     console.error("Error adding image:", e)
@@ -149,6 +223,23 @@ async function addImage() {
   z-index: 1;
 }
 
+.edit-dialog {
+  width: 420px;
+  max-width: 90vw;
+}
+
+.edit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-preview {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  align-self: center;
+}
 
 </style>
 

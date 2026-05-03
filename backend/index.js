@@ -61,7 +61,7 @@ app.get("/botanical_family", (request, response) => {
 
 // api za ucitavanje slika 
 app.get("/images", (req, res) => {
-  dbConn.query("SELECT id, image_url FROM image", (error, results) => {
+  dbConn.query("SELECT id, name, image_url FROM image", (error, results) => {
     if (error) throw error;
 
     res.send({
@@ -84,6 +84,40 @@ app.delete("/image/:id", (req, res) => {
       message: "Image deleted",
     });
   });
+});
+
+
+// api za uredivanje slika
+app.put("/image/:id", (req, res) => {
+  const image_id = req.params.id;
+  const { name, image_url } = req.body;
+
+  if (!image_url) {
+    return res.status(400).send({
+      error: true,
+      message: "image_url is required",
+    });
+  }
+
+  dbConn.query(
+    "UPDATE image SET name=?, image_url=? WHERE id=?",
+    [name, image_url, image_id],
+    (error, results) => {
+      if (error) {
+        console.error("SQL ERROR:", error);
+        return res.status(500).send({
+          error: true,
+          message: "DB error",
+        });
+      }
+
+      res.send({
+        error: false,
+        message: "Image updated",
+        affectedRows: results.affectedRows,
+      });
+    }
+  );
 });
 
 
