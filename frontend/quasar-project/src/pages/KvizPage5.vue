@@ -203,6 +203,8 @@ async function handleFinish() {
       await axios.post("http://localhost:3000/save-score", {
         userId: user.id,
         score: state.bodovi,
+        brojTocnih: state.brojTocnih,
+        brojNetocnih: state.brojNetocnih
       });
 
       //  SUCCESS NOTIFY

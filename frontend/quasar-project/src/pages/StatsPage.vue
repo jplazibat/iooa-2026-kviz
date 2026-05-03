@@ -34,6 +34,15 @@
   <span class="stat-label"> Ukupno bodova</span>
   <span class="stat-value">{{ stats.total_points || 0 }}</span>
 </div>
+<div class="stat-row">
+  <span class="stat-label"> Ukupno točnih odgovora</span>
+  <span class="stat-value">{{ stats.total_correct || 0 }}</span>
+</div>
+
+<div class="stat-row">
+  <span class="stat-label"> Ukupno netočnih odgovora</span>
+  <span class="stat-value">{{ stats.total_wrong || 0 }}</span>
+</div>
 
 <div class="stat-row">
   <span class="stat-label"> Zadnje igranje</span>
@@ -63,9 +72,9 @@
         height="350"
         :options="chartOptions"
         :series="series"
-        v-if="history.length"
+        v-if="chartHistory.length"
 />
-<div v-if="history.length === 0" class="text-center q-mt-md">
+<div v-if="chartHistory.length === 0" class="text-center q-mt-md">
   Još nema rezultata za prikaz. Igraj kvizove da vidiš svoj napredak ovdje!
 </div>
 
@@ -113,7 +122,7 @@
 
       <q-table
   title="Povijest rezultata"
-  :rows="history"
+  :rows="tableHistory"
   :columns="columns"
   row-key="created_at"
   flat
@@ -138,7 +147,8 @@ const vueApexCharts = VueApexCharts;
 
 
 const stats = ref({});
-const history = ref([]);
+const tableHistory = ref([]);
+const chartHistory = ref([]);
 const selectedRange = ref("all");
 
 const user = JSON.parse(localStorage.getItem("user"));
@@ -151,7 +161,9 @@ const loadStats = async (range = "all") => {
   );
 
   stats.value = res.data.stats;
-  history.value = res.data.history;
+  tableHistory.value = res.data.tableHistory;
+  chartHistory.value = res.data.chartHistory;
+
 };
 
 onMounted(() => {
@@ -170,10 +182,26 @@ const columns = [
     sortable: true,
     format: val => `${val} bodova`
   },
+    {
+    name: "broj_tocnih",
+    label: "Broj točnih",
+    field: "broj_tocnih",
+    sortable: true,
+    format: val => `${val} bodova`
+  },
+
+  {
+    name: "broj_netocnih",
+    label: "Broj netočnih",
+    field: "broj_netocnih",
+    sortable: true,
+    format: val => `${val} bodova`
+  },
   {
     name: "created_at",
     label: "Vrijeme",
     field: "created_at",
+    sortable: true,
     format: val => formatDate(val)
   }
 ];
@@ -181,7 +209,7 @@ const columns = [
 const series = computed(() => [
   {
     name: "Bodovi",
-    data: history.value.map(item => item.rezultat)
+    data: chartHistory.value.map(item => item.rezultat)
   }
 ]);
 
@@ -235,7 +263,7 @@ const chartOptions = computed(() => ({
   },
 
   xaxis: {
-    categories: history.value.map(item =>
+    categories: chartHistory.value.map(item =>
       new Date(item.created_at).toLocaleDateString("hr-HR")
     ),
 

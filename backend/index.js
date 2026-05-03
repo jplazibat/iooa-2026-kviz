@@ -403,10 +403,10 @@ app.post('/register', (req, res) => {
             return res.status(500).json({ message: 'Hash error' });
           }
         }
-      ); // 👈 zatvoren username query
+      ); 
     }
-  ); // 👈 zatvoren email query
-}); // 👈 zatvoren route
+  );   
+});   
 
 
 
@@ -491,25 +491,34 @@ app.post('/login', (req, res) => {
 });
 //spremanje rezultata kviza u bazu
 app.post('/save-score', (req, res) => {
-  const { userId, score } = req.body;
+  const { userId, score, brojTocnih, brojNetocnih } = req.body;
 
-  if (!userId || score == null) {
+  if (
+    !userId ||
+    score == null ||
+    brojTocnih == null ||
+    brojNetocnih == null
+  ) {
     return res.status(400).json({ message: 'Missing data' });
   }
 
   dbConn.query(
-    'INSERT INTO rezultati (user_id, rezultat,vrijeme, timestamp) VALUES (?, ?, 30, current_timestamp())',
-    [userId, score],
+    `INSERT INTO rezultati 
+    (user_id, rezultat, vrijeme, broj_tocnih, broj_netocnih, timestamp) 
+    VALUES (?, ?, 30, ?, ?, current_timestamp())`,
+    [userId, score, brojTocnih, brojNetocnih],
     (err) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ message: 'DB error' });
       }
+
       console.log('Rezultat pohranjen');
       res.json({ message: 'Rezultat pohranjen' });
     }
   );
 });
+
 
 // dohvat statistike i povijesti rezultata za određenog usera
 app.get('/user-stats/:id', (req, res) => {
@@ -539,6 +548,8 @@ app.get('/user-stats/:id', (req, res) => {
       MAX(rezultat) AS best_score,
       AVG(rezultat) AS avg_score,
       SUM(rezultat) AS total_points,
+      SUM(broj_tocnih) AS total_correct,
+      SUM(broj_netocnih) AS total_wrong,
       MAX(timestamp) AS last_played
     FROM rezultati
     WHERE user_id = ?
@@ -548,24 +559,38 @@ app.get('/user-stats/:id', (req, res) => {
   dbConn.query(statsQuery, [userId], (err, stats) => {
     if (err) return res.status(500).json({ message: err.message });
 
-    const historyQuery = `
+    const tableQuery = `
+      SELECT rezultat, broj_tocnih, broj_netocnih, timestamp as created_at
+      FROM rezultati
+      WHERE user_id = ?
+      ${dateFilter}
+      ORDER BY timestamp DESC
+    `;
+
+    const chartQuery = `
       SELECT rezultat, timestamp as created_at
       FROM rezultati
       WHERE user_id = ?
       ${dateFilter}
-      ORDER BY timestamp asc
+      ORDER BY timestamp ASC
     `;
 
-    dbConn.query(historyQuery, [userId], (err2, history) => {
+    dbConn.query(tableQuery, [userId], (err2, tableHistory) => {
       if (err2) return res.status(500).json({ message: err2.message });
 
-      res.json({
-        stats: stats[0],
-        history
+      dbConn.query(chartQuery, [userId], (err3, chartHistory) => {
+        if (err3) return res.status(500).json({ message: err3.message });
+
+        res.json({
+          stats: stats[0],
+          tableHistory,
+          chartHistory
+        });
       });
     });
   });
 });
+
 
 //spremanje rezultata kviza u bazu
 app.post('/save-score', (req, res) => {
