@@ -43,6 +43,21 @@
   <span class="stat-label"> Ukupno netočnih odgovora</span>
   <span class="stat-value">{{ stats.total_wrong || 0 }}</span>
 </div>
+<div class="stat-row">
+  <span class="stat-label"> Prosječno vrijeme</span>
+  <span class="stat-value">{{ stats.avg_time || 0 }} s</span>
+</div>
+
+<div class="stat-row">
+  <span class="stat-label"> Najbrže rješavanje</span>
+  <span class="stat-value">{{ stats.best_time || 0 }} s</span>
+</div>
+
+<div class="stat-row">
+  <span class="stat-label"> Ukupno igrano</span>
+  <span class="stat-value">{{ formatSeconds(stats.total_time || 0) }}
+</span>
+</div>
 
 <div class="stat-row">
   <span class="stat-label"> Zadnje igranje</span>
@@ -61,25 +76,87 @@
     </div>
 
     <!-- GRAF -->
-    <div class="col-12 col-md-8">
-      
+    <!-- DESNA STRANA -->
+<div class="col-12 col-md-8">
 
-       <q-card class="q-pa-md full-height dashboard-card fade-in delay-1">
-  <div class="text-h6 q-mb-md ">Graf rezultata</div>
+  <q-card class="q-pa-md dashboard-card fade-in delay-1 q-mb-md">
+    <div class="text-h6 q-mb-md">Graf rezultata</div>
 
+    <div class="chart-wrapper">
+
+  <div v-if="chartHistory.length">
     <vue-apex-charts
-        type="line"
-        height="350"
-        :options="chartOptions"
-        :series="series"
-        v-if="chartHistory.length"
-/>
-<div v-if="chartHistory.length === 0" class="text-center q-mt-md">
-  Još nema rezultata za prikaz. Igraj kvizove da vidiš svoj napredak ovdje!
+      :key="chartHistory.length + selectedRange"
+      type="line"
+      height="420"
+      :options="chartOptions"
+      :series="series"
+    />
+  </div>
+
+  <div v-else class="no-data-state">
+    <q-icon name="insights" size="64px" color="grey-5" />
+    <div class="text-h6 q-mt-sm">Nema podataka</div>
+    <div class="text-caption text-grey-6">
+      Igraj kvizove da vidiš svoj graf napretka
+    </div>
+    <q-btn
+        class="quiz-btn full-width q-mt-md"
+        icon="play_arrow"
+        label="Pokreni kviz"
+        to="/quiz"
+        unelevated
+    />
+
+
+
+  </div>
+
 </div>
 
-</q-card>
+  </q-card>
+
+  <!-- MINI STATISTIKE -->
+  <div class="row q-col-gutter-md">
+
+    <div class="col-12 col-sm-6">
+      <q-card class="mini-card fade-in delay-2">
+        <div class="mini-title">Točnost</div>
+        <div class="mini-value">
+          {{
+            stats.total_correct + stats.total_wrong > 0
+              ? Math.round((stats.total_correct / (stats.total_correct + stats.total_wrong)) * 100)
+              : 0
+          }}%
+        </div>
+      </q-card>
     </div>
+
+    <div class="col-12 col-sm-6">
+      <q-card class="mini-card fade-in delay-2">
+        <div class="mini-title">Prosječno vrijeme</div>
+        <div class="mini-value">{{ stats.avg_time || 0 }} s</div>
+      </q-card>
+    </div>
+
+    <div class="col-12 col-sm-6">
+      <q-card class="mini-card fade-in delay-2">
+        <div class="mini-title">Najbrže</div>
+        <div class="mini-value">{{ stats.best_time || 0 }} s</div>
+      </q-card>
+    </div>
+
+    <div class="col-12 col-sm-6">
+      <q-card class="mini-card fade-in delay-2">
+        <div class="mini-title">Ukupno igrano</div>
+        <div class="mini-value">{{ stats.total_time || 0 }} s</div>
+      </q-card>
+    </div>
+
+  </div>
+
+</div>
+
 
   </div>
 
@@ -198,13 +275,26 @@ const columns = [
     format: val => `${val} bodova`
   },
   {
+  name: "vrijeme",
+  label: "Vrijeme igranja",
+  field: "vrijeme",
+  sortable: true,
+  format: val => `${val} s`
+},
+
+  {
     name: "created_at",
-    label: "Vrijeme",
+    label: "Datum i vrijeme",
     field: "created_at",
     sortable: true,
     format: val => formatDate(val)
   }
 ];
+const formatSeconds = (sec) => {
+  const min = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${min}m ${s}s`;
+};
 
 const series = computed(() => [
   {
@@ -466,7 +556,75 @@ dataLabels: {
   padding: 6px 10px;
 }
 
+.mini-card {
+  padding: 22px;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+  text-align: center;
+  transition: all 0.25s ease;
+}
 
+.mini-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.10);
+}
+
+.mini-title {
+  font-size: 14px;
+  color: #558b2f;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.mini-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1b5e20;
+}
+
+.chart-wrapper {
+  height: 420px; 
+  justify-content: center;
+}
+
+.no-data-state {
+  text-align: center;
+  color: #9e9e9e;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quiz-btn {
+  background: linear-gradient(135deg, #2e7d32, #66bb6a);
+  color: white;
+  font-weight: 700;
+  border-radius: 18px;
+  padding: 10px 18px;
+  box-shadow: 0 10px 25px rgba(46, 125, 50, 0.25);
+  transition: all 0.25s ease;
+  text-transform: none;
+  max-width: 400px;
+}
+
+.quiz-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 35px rgba(46, 125, 50, 0.35);
+}
+
+.quiz-btn .q-icon {
+  font-size: 20px;
+}
 
 </style>
 

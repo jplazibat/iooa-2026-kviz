@@ -550,6 +550,9 @@ app.get('/user-stats/:id', (req, res) => {
       SUM(rezultat) AS total_points,
       SUM(broj_tocnih) AS total_correct,
       SUM(broj_netocnih) AS total_wrong,
+      AVG(vrijeme) AS avg_time,
+      MIN(vrijeme) AS best_time,
+      SUM(vrijeme) AS total_time,
       MAX(timestamp) AS last_played
     FROM rezultati
     WHERE user_id = ?
@@ -560,7 +563,7 @@ app.get('/user-stats/:id', (req, res) => {
     if (err) return res.status(500).json({ message: err.message });
 
     const tableQuery = `
-      SELECT rezultat, broj_tocnih, broj_netocnih, timestamp as created_at
+      SELECT rezultat, broj_tocnih, broj_netocnih, vrijeme, timestamp as created_at
       FROM rezultati
       WHERE user_id = ?
       ${dateFilter}
@@ -613,6 +616,7 @@ app.post('/save-score', (req, res) => {
     }
   );
 });
+
 
 
 
