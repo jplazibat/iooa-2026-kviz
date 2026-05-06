@@ -319,8 +319,29 @@ app.get('/pitanje/:id', (req, res) => {
   });
 });
 
+// Retrieve FunFact for a plant_species
+app.get("/fun_fact/:id", (request, response) => {
+  let plant_species_id = request.params.id;
 
+  dbConn.query(
+    "SELECT fun_fact FROM plant_fun_facts WHERE plant_species_id = ? LIMIT 1",
+    [plant_species_id],
+    (error, results) => {
+      if (error) {
+        return response.status(500).send({
+          error: true,
+          message: error.message,
+        });
+      }
 
+      response.send({
+        error: false,
+        data: results[0],
+        message: "fun_fact detail.",
+      });
+    }
+  );
+});
 app.listen(3000, function () {
   console.log("Node app is running on port 3000");
 });

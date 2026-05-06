@@ -28,37 +28,20 @@
 
     <div class="q-pa-md q-gutter-sm">
       <q-btn
-  id="PrihvatiOdgovor"
-  color="white"
-  text-color="black"
-  label="Prihvati odgovor"
-  @click="
-    prikaziGumb();
-    state.alert = true;
-    if (state.odabraniOdgovor === state.tocanOdgovor.id) {
-      state.brojTocnih += 1;
-      state.bodovi += state.tezina; // Dodaj bodove za točan odgovor
-    } else {
-      state.brojNetocnih += 1;
-    }
-  "
-/>
-<q-btn
-  id="PrihvatiIZavrsi"
-  color="white"
-  text-color="black"
-  label="Prihvati i završi"
-  @click="
-    if (state.odabraniOdgovor === state.tocanOdgovor.id) {
-      state.brojTocnih += 1;
-      state.bodovi += state.tezina; // Dodaj bodove za točan odgovor
-    } else {
-      state.brojNetocnih += 1;
-    }
-    state.zavrsniPopup = true;
-  "
-  disabled
-/>
+        id="PrihvatiOdgovor"
+        color="white"
+        text-color="black"
+        label="Prihvati odgovor"
+        @click="prihvatiOdgovor"
+      />
+      <q-btn
+        id="PrihvatiIZavrsi"
+        color="white"
+        text-color="black"
+        label="Prihvati i završi"
+        @click="prihvatiIZavrsi"
+        disabled
+      />
       <q-btn
         id="Refresh"
         color="white"
@@ -89,6 +72,21 @@
                   state.tocanOdgovor.croatian_name
             }}
           </q-card-section>
+          <q-card-section
+            v-if="state.odabraniOdgovor !== state.tocanOdgovor.id && state.porukaOhrabrenja"
+            class="q-pt-none text-positive text-weight-medium"
+          >
+            {{ state.porukaOhrabrenja }}
+          </q-card-section>
+
+        <q-card-section
+  v-if="state.funFact"
+  class="q-pt-none"
+>
+  <div class="text-weight-bold">Zanimljivost:</div>
+  <div>{{ state.funFact }}</div>
+</q-card-section>
+
           <q-card-actions align="right">
             <q-btn
               flat
@@ -158,6 +156,16 @@
 import { onMounted, reactive } from "vue";
 import axios from "axios";
 
+const porukeOhrabrenja = [
+  "Nema veze, sljedeći pokušaj može biti uspješniji!",
+  "Pogreške su dio učenja.",
+  "Nastavite dalje, svaki pokušaj doprinosi učenju.",
+  "Znanje se stječe postupno.",
+  "Učenje je proces, a ne savršenstvo.",
+  "Trud i upornost vode do rezultata.",
+  "Napredak dolazi kroz trud i ponavljanje."
+];
+
 var clicks = 1; // brojevi idu redom, ne ponavljaju se
 
 export default {
@@ -175,6 +183,8 @@ export default {
       image: "",
       alert: false,
       zavrsniPopup: false,
+      porukaOhrabrenja: "",
+      funFact: "",
       tezina: 1, //tezina
     });
 
@@ -183,12 +193,16 @@ export default {
       await randomPlant();
       await getRandomBotanicalPlant();
       await getImage();
+      await getFunFact();
     });
 
     async function handleClose() {
+      state.porukaOhrabrenja = "";
+      state.funFact = "";
       await randomPlant();
       await getRandomBotanicalPlant();
       await getImage();
+      await getFunFact();
     }
 
     async function getImage() {
@@ -206,6 +220,16 @@ export default {
         state.image = "";
       }
     }
+async function getFunFact() {
+  const json = await axios.get(`http://localhost:3000/fun_fact/${state.plant.id}`);
+  const data = json.data.data;
+
+  if (data && data.fun_fact) {
+    state.funFact = data.fun_fact;
+  } else {
+    state.funFact = "";
+  }
+}
 
 // Funkcija za generiranje novog pitanja
 async function randomPlant() {
@@ -345,12 +369,52 @@ async function getGenus() {
       state.tocanOdgovor = json.data.data;
     }
 
+    let brojKlikova = 0;
+
+    function provjeriOdgovor() {
+      if (state.odabraniOdgovor === state.tocanOdgovor.id) {
+        state.brojTocnih += 1;
+        state.bodovi += state.tezina;
+        state.porukaOhrabrenja = "";
+      } else {
+        state.brojNetocnih += 1;
+        state.porukaOhrabrenja =
+          porukeOhrabrenja[Math.floor(Math.random() * porukeOhrabrenja.length)];
+      }
+    }
+
+    function prihvatiOdgovor() {
+      brojKlikova += 1;
+      provjeriOdgovor();
+      state.alert = true;
+
+      if (brojKlikova >= 8) {
+        const button1 = document.getElementById("PrihvatiOdgovor");
+        const button2 = document.getElementById("PrihvatiIZavrsi");
+        const button3 = document.getElementById("Refresh");
+
+        if (button2) button2.removeAttribute("disabled");
+        if (button3) button3.removeAttribute("disabled");
+        if (button1) {
+          button1.setAttribute("disabled", true);
+          button1.style.display = "none";
+        }
+      }
+    }
+
+    function prihvatiIZavrsi() {
+      provjeriOdgovor();
+      state.zavrsniPopup = true;
+    }
+
     return {
       state,
       randomPlant,
       getRandomBotanicalPlant,
       getCorrectAnswerFromBotanicalFamily,
       handleClose,
+      prihvatiOdgovor,
+      prihvatiIZavrsi,
     };
   },
 
