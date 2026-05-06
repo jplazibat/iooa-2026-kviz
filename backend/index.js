@@ -618,6 +618,61 @@ app.post('/save-score', (req, res) => {
 });
 
 
+// LEADERBOARD
+app.get('/leaderboard', (req, res) => {
+  const query = `
+    SELECT 
+      u.id AS user_id,
+      u.username,
+
+      -- najbolji score korisnika
+      MAX(r.rezultat) AS best_score,
+
+      -- vrijeme rješavanja tog najboljeg scorea
+      (
+        SELECT r2.vrijeme
+        FROM rezultati r2
+        WHERE r2.user_id = u.id
+        ORDER BY r2.rezultat DESC, r2.vrijeme ASC
+        LIMIT 1
+      ) AS best_score_time,
+
+      -- datum kad je ostvaren najbolji rezultat
+      (
+        SELECT r3.timestamp
+        FROM rezultati r3
+        WHERE r3.user_id = u.id
+        ORDER BY r3.rezultat DESC, r3.vrijeme ASC
+        LIMIT 1
+      ) AS best_score_date,
+
+      ROUND(AVG(r.rezultat), 2) AS avg_score,
+      COUNT(r.id_rezultata) AS total_games,
+      SUM(r.broj_tocnih) AS total_correct,
+      SUM(r.broj_netocnih) AS total_wrong,
+      MIN(r.vrijeme) AS best_time,
+      MAX(r.timestamp) AS last_played
+
+    FROM user u
+    INNER JOIN rezultati r ON r.user_id = u.id
+    GROUP BY u.id, u.username
+    ORDER BY best_score DESC, best_score_time ASC, avg_score DESC
+    LIMIT 100
+  `;
+
+  dbConn.query(query, (err, results) => {
+    if (err) {
+      console.error('Leaderboard error:', err);
+      return res.status(500).json({
+        message: 'Greška kod dohvaćanja leaderboarda'
+      });
+    }
+
+    res.json(results);
+  });
+});
+
+
 
 
 
