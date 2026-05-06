@@ -673,7 +673,56 @@ app.get('/leaderboard', (req, res) => {
 });
 
 
+// Usporedba statistike ja vs prosjek
+app.get('/compare-stats/:userId', (req, res) => {
+  const userId = req.params.userId;
 
+  // user stats
+  const userQuery = `
+  SELECT 
+  COALESCE(AVG(rezultat), 0) as avg_score,
+  COALESCE(MAX(rezultat), 0) as best_score,
+  COUNT(*) as total_games,
+
+  COALESCE(AVG(vrijeme), 0) as avg_time,
+  COALESCE(AVG(broj_tocnih), 0) as avg_correct,
+  COALESCE(AVG(broj_netocnih), 0) as avg_wrong
+
+  FROM rezultati
+  WHERE user_id = ?
+
+
+  `;
+
+  // global stats
+  const globalQuery = `
+    SELECT 
+  COALESCE(AVG(rezultat), 0) as avg_score,
+  COALESCE(MAX(rezultat), 0) as best_score,
+  COUNT(*) as total_games,
+
+  COALESCE(AVG(vrijeme), 0) as avg_time,
+  COALESCE(AVG(broj_tocnih), 0) as avg_correct,
+  COALESCE(AVG(broj_netocnih), 0) as avg_wrong
+
+  FROM rezultati
+
+
+  `;
+
+  dbConn.query(userQuery, [userId], (err, userRes) => {
+    if (err) return res.status(500).json(err);
+
+    dbConn.query(globalQuery, (err2, globalRes) => {
+      if (err2) return res.status(500).json(err2);
+
+      res.json({
+        my: userRes[0],
+        global: globalRes[0]
+      });
+    });
+  });
+});
 
 
 app.listen(3000, function () {
