@@ -39,15 +39,25 @@
 
       <!-- Novi tip: popunjavanje praznine -->
       <template v-else>
-        <q-input
-          v-model="state.praznina.uneseniOdgovor"
-          outlined
-          label="Unesite odgovor"
-          :disable="state.praznina.odgovorPotvrden"
-          @keyup.enter="checkAnswer"
-          style="max-width: 400px"
-        />
-      </template>
+  <div class="crtice-container" @keydown="handleCrticeKeydown">
+    <template v-for="(slovo, i) in state.praznina.crticePrikaz" :key="i">
+      <!-- Razmak između riječi -->
+      <span v-if="slovo === ' '" class="crtice-razmak">&nbsp;&nbsp;</span>
+      
+      <!-- Slovo kao input -->
+      <input
+        v-else
+        :ref="el => { if (el) crticaRefs[i] = el }"
+        v-model="state.praznina.crticePrikaz[i]"
+        class="crtice-input"
+        maxlength="1"
+        :disabled="state.praznina.odgovorPotvrden"
+        @input="onCrticaInput(i)"
+        @keydown.delete="onCrticaDelete(i, $event)"
+      />
+    </template>
+  </div>
+</template>
     </div>
 
     <!-- BUTTONS -->
@@ -202,8 +212,11 @@ export default {
         uneseniOdgovor: "",
         tocniOdgovor: "",
         odgovorPotvrden: false,
+        crticePrikaz: [],
       },
     });
+
+    const crticaRefs = {};
 
     onMounted(async () => {
       await loadQuestion();
@@ -235,6 +248,11 @@ export default {
             "Latinski naziv za " + state.plant.croatian_name + " je";
           state.praznina.tocniOdgovor = state.plant.latin_name;
         }
+      
+        state.praznina.crticePrikaz = state.praznina.tocniOdgovor
+    .split("")
+    .map(c => (c === " " ? " " : ""));
+
       } else {
         state.pitanje =
           "Koji je latinski naziv za " + state.plant.croatian_name + "?";
@@ -339,6 +357,32 @@ export default {
       state.image = json.data.data?.image_url || "";
     }
 
+    // ================= CRTICE =================
+function onCrticaInput(i) {
+  let next = i + 1;
+  while (next < state.praznina.crticePrikaz.length && state.praznina.crticePrikaz[next] === " ") {
+    next++;
+  }
+  if (next < state.praznina.crticePrikaz.length) {
+    crticaRefs[next]?.focus();
+  }
+
+  state.praznina.uneseniOdgovor = state.praznina.crticePrikaz.join("");
+}
+
+function onCrticaDelete(i, event) {
+  if (state.praznina.crticePrikaz[i] !== "") return;
+
+  let prev = i - 1;
+  while (prev >= 0 && state.praznina.crticePrikaz[prev] === " ") {
+    prev--;
+  }
+  if (prev >= 0) {
+    crticaRefs[prev]?.focus();
+    state.praznina.crticePrikaz[prev] = "";
+  }
+}
+
     // ================= LABEL =================
     function getLabel(o) {
       return state.trueFalseMode ? o.croatian_name : o.latin_name;
@@ -407,6 +451,9 @@ export default {
 
     return {
       state,
+      crticaRefs,
+      onCrticaInput,
+      onCrticaDelete,
       checkAnswer,
       nextQuestion,
       restartQuiz,
@@ -429,4 +476,32 @@ export default {
   flex-direction: column;
   width: 700px;
 }
+
+.crtice-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.crtice-input {
+  width: 28px;
+  height: 36px;
+  text-align: center;
+  font-size: 1.2rem;
+  border: none;
+  border-bottom: 2px solid #333;
+  background: transparent;
+  outline: none;
+  text-transform: uppercase;
+}
+
+.crtice-input:focus {
+  border-bottom-color: teal;
+}
+
+.crtice-razmak {
+  width: 16px;
+}
+
 </style>
