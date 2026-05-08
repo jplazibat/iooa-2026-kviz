@@ -104,7 +104,7 @@
         class="quiz-btn full-width q-mt-md"
         icon="play_arrow"
         label="Pokreni kviz"
-        to="/quiz"
+        to="/kviz5"
         unelevated
     />
 
@@ -167,28 +167,28 @@
   
 
   <q-btn
-    label="Today"
+    label="Danas"
     :class="selectedRange === 'today' ? 'filter-active' : 'filter-btn'"
     unelevated
     @click="loadStats('today')"
   />
 
   <q-btn
-    label="This Week"
+    label="Ovaj tjedan"
     :class="selectedRange === 'week' ? 'filter-active' : 'filter-btn'"
     unelevated
     @click="loadStats('week')"
   />
 
   <q-btn
-    label="This Month"
+    label="Ovaj mjesec"
     :class="selectedRange === 'month' ? 'filter-active' : 'filter-btn'"
     unelevated
     @click="loadStats('month')"
   />
 
   <q-btn
-    label="All"
+    label="Sve"
     :class="selectedRange === 'all' ? 'filter-active' : 'filter-btn'"
     unelevated
     @click="loadStats('all')"
@@ -219,7 +219,7 @@
 import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 import VueApexCharts from "vue3-apexcharts";
-
+import { useRouter } from "vue-router";
 const vueApexCharts = VueApexCharts;
 
 
@@ -228,9 +228,19 @@ const tableHistory = ref([]);
 const chartHistory = ref([]);
 const selectedRange = ref("all");
 
+
+
+const router = useRouter();
+
 const user = JSON.parse(localStorage.getItem("user"));
 
+if (!user) {
+  router.push("/login");
+}
+
 const loadStats = async (range = "all") => {
+  if (!user) return;
+
   selectedRange.value = range;
 
   const res = await axios.get(
@@ -240,7 +250,6 @@ const loadStats = async (range = "all") => {
   stats.value = res.data.stats;
   tableHistory.value = res.data.tableHistory;
   chartHistory.value = res.data.chartHistory;
-
 };
 
 onMounted(() => {

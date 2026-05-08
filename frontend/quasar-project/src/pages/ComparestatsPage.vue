@@ -98,10 +98,17 @@
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import ApexChart from "vue3-apexcharts";
+import { useRouter } from "vue-router";
 
 const apexchart = ApexChart;
 
+const router = useRouter();
+
 const user = JSON.parse(localStorage.getItem("user"));
+
+if (!user) {
+  router.push("/login");
+}
 
 const myStats = ref({
   avg_score: 0,
@@ -123,6 +130,9 @@ const globalStats = ref({
 
 
 const loadStats = async () => {
+
+  if (!user) return;
+
   const res = await axios.get(
     `http://localhost:3000/compare-stats/${user.id}`
   );

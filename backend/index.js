@@ -331,20 +331,20 @@ app.post('/register', (req, res) => {
   const { email, password, name } = req.body;
 
   if (!email || !password || !name) {
-    return res.status(400).json({ message: 'All fields required' });
+    return res.status(400).json({ message: 'Sva polja su obavezna' });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return res.status(400).json({ message: 'Invalid email' });
+    return res.status(400).json({ message: 'Neispravan email format' });
   }
 
   if (password.length < 6) {
-    return res.status(400).json({ message: 'Password too short' });
+    return res.status(400).json({ message: 'Lozinka je prekratka' });
   }
 
   if (name.length < 3) {
-    return res.status(400).json({ message: 'Username too short' });
+    return res.status(400).json({ message: 'Korisničko ime je prekratko' });
   }
 
   // EMAIL CHECK
@@ -359,7 +359,7 @@ app.post('/register', (req, res) => {
       }
 
       if (results.length > 0) {
-        return res.status(409).json({ message: 'Email already exists' });
+        return res.status(409).json({ message: 'Email već postoji' });
       }
 
       // USERNAME CHECK
@@ -374,7 +374,7 @@ app.post('/register', (req, res) => {
           }
 
           if (usernameResults.length > 0) {
-            return res.status(409).json({ message: 'Username already exists' });
+            return res.status(409).json({ message: 'Korisničko ime već postoji' });
           }
 
           try {
@@ -423,7 +423,7 @@ app.post('/login', (req, res) => {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return res.status(400).json({ message: 'Invalid email' });
+    return res.status(400).json({ message: 'Neispravan email format' });
   }
 
   // 1. traženje usera po emailu
@@ -438,7 +438,7 @@ app.post('/login', (req, res) => {
       }
 
       if (results.length === 0) {
-        return res.status(401).json({ message: 'Invalid email' });
+        return res.status(401).json({ message: 'Neispravan email' });
       }
 
       const user = results[0];
@@ -448,12 +448,12 @@ app.post('/login', (req, res) => {
         const passwordMatch = await bcrypt.compare(password, user.password);
 
         if (!passwordMatch) {
-          return res.status(401).json({ message: 'Invalid password' });
+          return res.status(401).json({ message: 'Neispravna lozinka' });
         }
 
         // 3.  provjera da li je user aktivan
         if (user.active !== 1) {
-          return res.status(403).json({ message: 'Account not active' });
+          return res.status(403).json({ message: 'Račun nije aktiviran' });
         }
 
         // 4. login OK → ovdje možeš napraviti JWT ili session
@@ -470,7 +470,7 @@ app.post('/login', (req, res) => {
             }
 
             return res.status(200).json({
-              message: 'Login successful',
+              message: 'Uspješna prijava',
               token,
               user: {
                 id: user.id,
@@ -484,7 +484,7 @@ app.post('/login', (req, res) => {
 
       } catch (compareError) {
         console.error('BCRYPT ERROR:', compareError);
-        return res.status(500).json({ message: 'Password check error' });
+        return res.status(500).json({ message: 'Greška prilikom provjere lozinke' });
       }
     }
   );
@@ -499,7 +499,7 @@ app.post('/save-score', (req, res) => {
     brojTocnih == null ||
     brojNetocnih == null
   ) {
-    return res.status(400).json({ message: 'Missing data' });
+    return res.status(400).json({ message: 'Nedostaju podaci' });
   }
 
   dbConn.query(
@@ -510,7 +510,7 @@ app.post('/save-score', (req, res) => {
     (err) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ message: 'DB error' });
+        return res.status(500).json({ message: 'Greška u bazi podataka' });
       }
 
       console.log('Rezultat pohranjen');

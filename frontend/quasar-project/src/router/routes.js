@@ -14,7 +14,7 @@ const routes = [
       { path: "leaderboard", component: () => import("pages/LeaderboardPage.vue") },
       { path: "login", component: () => import("pages/LoginForm.vue") },
       { path: "stats", component: () => import("pages/StatsPage.vue") },
-
+      { path: "compare-stats", component: () => import("pages/ComparestatsPage.vue") }
     ],
   },
 

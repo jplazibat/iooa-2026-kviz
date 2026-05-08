@@ -2,7 +2,7 @@
     <q-page class="flex flex-center">
         <q-card class="q-pa-lg" style="min-width: 400px;">
             <q-card-section>
-                <div class="text-h6">Login</div>
+                <div class="text-h6">Prijava</div>
             </q-card-section>
 
             
@@ -15,18 +15,18 @@
                         outlined
                         class="q-mb-md"
                         :rules="[
-                            val => !!val || 'Email is required',
-                            val => /.+@.+\..+/.test(val) || 'Invalid email format',
-                            val => val.length <= 150 || 'Email is too long'
+                            val => !!val || 'Email je obavezan',
+                            val => /.+@.+\..+/.test(val) || 'Neispravan email format',
+                            val => val.length <= 150 || 'Email je predugačak'
                         ]"
                     />
                    <q-input
                     v-model="password"
                     :type="showPassword ? 'text' : 'password'"
-                    label="Password"
+                    label="Lozinka"
                     outlined
                     class="q-mb-md"
-                    :rules="[val => !!val || 'Password is required']"
+                    :rules="[val => !!val || 'Lozinka je obavezna']"
                   >
                     <template v-slot:append>
                       <q-icon

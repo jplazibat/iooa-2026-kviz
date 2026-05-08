@@ -3,7 +3,7 @@
     <q-card class="q-pa-lg" style="min-width: 400px;">
       
       <q-card-section>
-        <div class="text-h6">Registration</div>
+        <div class="text-h6">Registracija</div>
       </q-card-section>
 
       <q-card-section>
@@ -12,9 +12,9 @@
           <!-- NAME -->
           <q-input
             v-model="form.name"
-            label="Username"
+            label="Korisničko ime"
             outlined
-            :rules="[val => !!val || 'Username is required']"
+            :rules="[val => !!val || 'Korsiničko ime je obavezno']"
           />
 
           <!-- EMAIL -->
@@ -24,18 +24,18 @@
             type="email"
             outlined
            :rules="[
-            val => !!val || 'Email is required',
-            val => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) || 'Enter a valid email'
+            val => !!val || 'Email je obavezan',
+            val => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) || 'Unesite validnu email adresu'
             ]"
           />
 
           <!-- PASSWORD -->
           <q-input
             v-model="form.password"
-            label="Password"
+            label="Lozinka"
             :type="showPassword ? 'text' : 'password'"
             outlined
-            :rules="[val => val && val.length >= 6 || 'Min 6 characters']"
+            :rules="[val => val && val.length >= 6 || 'Minimalno 6 znakova']"
           >
             <template v-slot:append>
               <q-icon
@@ -48,7 +48,7 @@
 
           <!-- PASSWORD STRENGTH -->
           <div v-if="passwordStrength.label" class="text-caption q-mt-sm">
-            Strength:
+            Jačina lozinke:
             <span :class="`text-${passwordStrength.color}`">
               {{ passwordStrength.label }}
             </span>
@@ -57,10 +57,10 @@
           <!-- CONFIRM PASSWORD -->
           <q-input
             v-model="form.confirmPassword"
-            label="Confirm Password"
+            label="Potvrdi lozinku"
             :type="showConfirmPassword ? 'text' : 'password'"
             outlined
-            :rules="[val => val === form.password || 'Passwords do not match']"
+            :rules="[val => val === form.password || 'Lozinke se ne podudaraju']"
           >
             <template v-slot:append>
               <q-icon
@@ -74,7 +74,7 @@
           <!-- BUTTON -->
           <q-btn
             type="submit"
-            label="Register"
+            label="Registriraj se"
             color="positive"
             unelevated
             :loading="loading"
@@ -138,9 +138,9 @@ export default {
       if (/[0-9]/.test(pass)) score++
       if (/[^A-Za-z0-9]/.test(pass)) score++
 
-      if (score <= 1) return { label: 'Weak', color: 'negative' }
-      if (score === 2) return { label: 'Medium', color: 'warning' }
-      return { label: 'Strong', color: 'positive' }
+      if (score <= 1) return { label: 'Slaba', color: 'negative' }
+      if (score === 2) return { label: 'Srednja', color: 'warning' }
+      return { label: 'Jaka', color: 'positive' }
     })
 
     const onSubmit = async () => {
