@@ -43,7 +43,7 @@
     <template v-for="(slovo, i) in state.praznina.crticePrikaz" :key="i">
       <!-- Razmak između riječi -->
       <span v-if="slovo === ' '" class="crtice-razmak">&nbsp;&nbsp;</span>
-      
+
       <!-- Slovo kao input -->
       <input
         v-else
@@ -87,14 +87,8 @@
     <!-- ALERT -->
     <q-dialog v-model="state.alert" persistent>
       <q-card
-        :class="
-          state.trueFalseMode
-            ? state.lastCorrect
-              ? 'bg-positive text-white'
-              : 'bg-negative text-white'
-            : ''
-        "
-      >
+  :class="state.lastCorrect ? 'bg-positive text-white' : 'bg-negative text-white'">
+  
         <!-- ONLY ONE RESULT (NO DUPLICATES) -->
         <q-card-section class="q-pt-none">
           <!-- TRUE / FALSE -->
@@ -248,7 +242,7 @@ export default {
             "Latinski naziv za " + state.plant.croatian_name + " je";
           state.praznina.tocniOdgovor = state.plant.latin_name;
         }
-      
+
         state.praznina.crticePrikaz = state.praznina.tocniOdgovor
     .split("")
     .map(c => (c === " " ? " " : ""));
