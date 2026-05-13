@@ -86,10 +86,9 @@
 
     <!-- ALERT -->
     <q-dialog v-model="state.alert" persistent>
-      <q-card
-  :class="state.lastCorrect ? 'bg-positive text-white' : 'bg-negative text-white'">
-  
-        <!-- ONLY ONE RESULT (NO DUPLICATES) -->
+      <q-card :class="state.lastCorrect ? 'bg-positive text-white' : 'bg-negative text-white'">
+
+        <!-- ONLY ONE RESULT -->
         <q-card-section class="q-pt-none">
           <!-- TRUE / FALSE -->
           <div v-if="state.trueFalseMode">
@@ -112,13 +111,19 @@
 
           <!-- MCQ -->
           <div v-else-if="!state.praznina.aktivan">
-            <div v-if="state.lastCorrect">TOČNO</div>
+            <div v-if="state.lastCorrect" class="text-h6 q-mt-sm">✓ TOČNO</div>
 
             <div v-else>
-              NETOČNO
+              <div class="text-h6 q-mt-sm">✗ NETOČNO</div>
               <div class="q-mt-sm">
-                Točan odgovor je:
-                <b>{{ state.tocanOdgovor.latin_name }}</b>
+                Biljka sa slike je:
+                <b>{{ state.plant.croatian_name }}</b>
+              </div>
+              <div class="q-mt-xs">
+                Latinski naziv: <b>{{ state.plant.latin_name }}</b>
+              </div>
+              <div class="q-mt-xs" v-if="state.trueFalsePorodica">
+                Porodica: <b>{{ state.trueFalsePorodica }}</b>
               </div>
             </div>
           </div>
