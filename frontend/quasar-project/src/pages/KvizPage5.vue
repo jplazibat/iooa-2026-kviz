@@ -509,6 +509,5 @@ function onCrticaDelete(i, event) {
 
 .crtice-razmak {
   width: 16px;
-}
 
-</style>
+}</style>
