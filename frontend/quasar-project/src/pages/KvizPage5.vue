@@ -130,11 +130,19 @@
 
           <!-- PRAZNINA -->
           <div v-else>
-            <div v-if="state.lastCorrect">TOČNO</div>
+            <div v-if="state.lastCorrect" class="text-h6 q-mt-sm">✓ TOČNO</div>
+
             <div v-else>
-              NETOČNO
+              <div class="text-h6 q-mt-sm">✗ NETOČNO</div>
               <div class="q-mt-sm">
-                Točan odgovor je: <b>{{ state.praznina.tocniOdgovor }}</b>
+                Biljka sa slike je:
+                <b>{{ state.plant.croatian_name }}</b>
+              </div>
+              <div class="q-mt-xs">
+                Latinski naziv: <b>{{ state.plant.latin_name }}</b>
+              </div>
+              <div class="q-mt-xs" v-if="state.trueFalsePorodica">
+                Porodica: <b>{{ state.trueFalsePorodica }}</b>
               </div>
             </div>
           </div>
