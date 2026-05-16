@@ -7,7 +7,7 @@ Kviz Biljne vrste
 - Michella Galich
 - Valentina Miculinić
 - Vicenco Tomaš
-=======
+- Denis Subašić
 -Fran Gunja,
 -Goran Borevac
 -Đana Haskić
