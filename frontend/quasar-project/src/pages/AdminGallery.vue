@@ -22,15 +22,16 @@
     </div>
 
     <div class="grid">
-      <div class="card" v-for="img in filteredImages" :key="img.id">
+      <div class="card" v-for="img in images" :key="img.id">
         <img
           :src="img.image_url"
           class="real-image"
           @error="e => e.target.src='https://via.placeholder.com/120'"
         />
 
-              <div class="meta">
+        <div class="meta">
           <div class="image-name">{{ img.name || 'Bez naziva' }}</div>
+          <div class="image-source" v-if="img.source">{{ img.source }}</div>
           <div class="species-name" v-if="img.plant_species_names">
             {{ img.plant_species_names }}
           </div>
@@ -43,89 +44,94 @@
       </div>
     </div>
 
-  <q-dialog v-model="editDialogOpen" persistent>
-  <q-card class="edit-dialog">
-    <q-card-section>
-      <div class="text-h6">Uredi sliku</div>
-    </q-card-section>
+    <!-- Dialog za uređivanje -->
+    <q-dialog v-model="editDialogOpen" persistent>
+      <q-card class="edit-dialog">
+        <q-card-section>
+          <div class="text-h6">Uredi sliku</div>
+        </q-card-section>
 
-    <q-card-section class="edit-fields">
-      <q-input v-model="editImageName" label="Ime slike" outlined dense />
-      <q-input v-model="editImageUrl" label="URL slike" outlined dense />
-      <q-select
-        v-model="editImageSpeciesId"
-        :options="speciesOptions"
-        label="Biljna vrsta"
-        outlined
-        dense
-        clearable
-        emit-value
-        map-options
-      />
-      <q-input
-        v-model="editImageDescription"
-        label="Opis slike"
-        outlined
-        dense
-        type="textarea"
-      />
+        <q-card-section class="edit-fields">
+          <q-input v-model="editImageName" label="Naziv slike" outlined dense />
+          <q-input v-model="editImageUrl" label="URL slike" outlined dense />
+          <q-input v-model="editImageSource" label="Izvor slike" outlined dense />
+          <q-select
+            v-model="editImageSpeciesId"
+            :options="speciesOptions"
+            label="Biljna vrsta"
+            outlined
+            dense
+            clearable
+            emit-value
+            map-options
+          />
+          <q-input
+            v-model="editImageDescription"
+            label="Opis slike"
+            outlined
+            dense
+            type="textarea"
+          />
 
-      <img
-        v-if="editImageUrl"
-        :src="editImageUrl"
-        class="edit-preview"
-        @error="e => e.target.src='https://via.placeholder.com/160'"
-      />
-    </q-card-section>
+          <img
+            v-if="editImageUrl"
+            :src="editImageUrl"
+            class="edit-preview"
+            @error="e => e.target.src='https://via.placeholder.com/160'"
+          />
+        </q-card-section>
 
-    <q-card-actions align="right">
-      <q-btn flat label="Odustani" color="primary" v-close-popup />
-      <q-btn label="Spremi" color="primary" @click="updateImage" />
-    </q-card-actions>
-  </q-card>
-</q-dialog>
+        <q-card-actions align="right">
+          <q-btn flat label="Odustani" color="primary" v-close-popup />
+          <q-btn label="Spremi" color="primary" @click="updateImage" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
-<q-dialog v-model="addDialogOpen" persistent>
-  <q-card class="edit-dialog">
-    <q-card-section>
-      <div class="text-h6">Dodaj sliku</div>
-    </q-card-section>
+    <!-- Dialog za dodavanje -->
+    <q-dialog v-model="addDialogOpen" persistent>
+      <q-card class="edit-dialog">
+        <q-card-section>
+          <div class="text-h6">Dodaj sliku</div>
+        </q-card-section>
 
-    <q-card-section class="edit-fields">
-      <q-input v-model="newImageName" label="Ime slike" outlined dense />
-      <q-input v-model="newImageUrl" label="URL slike" outlined dense />
-      <q-select
-        v-model="newImageSpeciesId"
-        :options="speciesOptions"
-        label="Biljna vrsta"
-        outlined
-        dense
-        clearable
-        emit-value
-        map-options
-      />
-      <q-input
-        v-model="newImageDescription"
-        label="Opis slike"
-        outlined
-        dense
-        type="textarea"
-      />
+        <q-card-section class="edit-fields">
+          <q-input v-model="newImageName" label="Naziv slike" outlined dense />
+          <q-input v-model="newImageUrl" label="URL slike" outlined dense />
+          <q-input v-model="newImageSource" label="Izvor slike" outlined dense />
+          <q-select
+            v-model="newImageSpeciesId"
+            :options="speciesOptions"
+            label="Biljna vrsta"
+            outlined
+            dense
+            clearable
+            emit-value
+            map-options
+          />
+          <q-input
+            v-model="newImageDescription"
+            label="Opis slike"
+            outlined
+            dense
+            type="textarea"
+          />
 
-      <img
-        v-if="newImageUrl"
-        :src="newImageUrl"
-        class="edit-preview"
-        @error="e => e.target.src='https://via.placeholder.com/160'"
-      />
-    </q-card-section>
+          <img
+            v-if="newImageUrl"
+            :src="newImageUrl"
+            class="edit-preview"
+            @error="e => e.target.src='https://via.placeholder.com/160'"
+          />
+        </q-card-section>
 
-    <q-card-actions align="right">
-      <q-btn flat label="Odustani" color="primary" @click="closeAddDialog" />
-      <q-btn label="Dodaj" color="primary" @click="addImage" />
-    </q-card-actions>
-  </q-card>
-</q-dialog>
+        <q-card-actions align="right">
+          <q-btn flat label="Odustani" color="primary" @click="closeAddDialog" />
+          <q-btn label="Dodaj" color="primary" @click="addImage" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </div>
 </template>
 
@@ -139,16 +145,21 @@ const plantSpeciesList = ref([])
 const selectedSpecies = ref(null)
 const $q = useQuasar()
 
+// Dodavanje
 const newImageName = ref("")
 const newImageUrl = ref("")
 const newImageDescription = ref("")
+const newImageSource = ref("")
 const newImageSpeciesId = ref(null)
 const addDialogOpen = ref(false)
+
+// Uređivanje
 const editDialogOpen = ref(false)
 const editImageId = ref(null)
 const editImageName = ref("")
 const editImageUrl = ref("")
 const editImageDescription = ref("")
+const editImageSource = ref("")
 const editImageSpeciesId = ref(null)
 
 const speciesOptions = computed(() => {
@@ -169,18 +180,12 @@ const speciesOptions = computed(() => {
 })
 
 function getImageSpeciesIds(img) {
-  if (!img.plant_species_ids) {
-    return []
-  }
+  if (!img.plant_species_ids) return []
   return img.plant_species_ids
     .split(",")
     .map((id) => parseInt(id, 10))
     .filter((id) => !Number.isNaN(id))
 }
-
-const filteredImages = computed(() => {
-  return images.value
-})
 
 async function loadPlantSpecies() {
   const res = await axios.get("http://localhost:3000/plant_species")
@@ -189,21 +194,16 @@ async function loadPlantSpecies() {
 
 async function loadImages() {
   const speciesId = selectedSpecies.value
-  const params = speciesId
-    ? `?plant_species_id=${speciesId}`
-    : ""
-  console.log("Loading images with speciesId:", speciesId, "URL:", `http://localhost:3000/images${params}`)
+  const params = speciesId ? `?plant_species_id=${speciesId}` : ""
   try {
     const res = await axios.get(`http://localhost:3000/images${params}`)
-    console.log("Images loaded:", res.data.data.length, "items")
     images.value = res.data.data
   } catch (e) {
     console.error("Error loading images:", e)
   }
 }
 
-function onSpeciesChange(newValue) {
-  console.log("Species changed to:", newValue)
+function onSpeciesChange() {
   loadImages()
 }
 
@@ -212,21 +212,13 @@ onMounted(() => {
   loadImages()
 })
 
-
 function confirmDeleteImage(id) {
   $q.dialog({
     title: 'Brisanje slike',
-    message: 'Jeste li sigurni da zelite izbrisati ovu sliku?',
-    cancel: true,
+    message: 'Jeste li sigurni da želite izbrisati ovu sliku?',
+    cancel: { label: 'Odustani', color: 'primary' },
+    ok: { label: 'Izbriši', color: 'negative' },
     persistent: true,
-    ok: {
-      label: 'Izbrisi',
-      color: 'negative'
-    },
-    cancel: {
-      label: 'Odustani',
-      color: 'primary'
-    }
   }).onOk(() => {
     deleteImage(id)
   })
@@ -237,6 +229,7 @@ function openEditDialog(img) {
   editImageName.value = img.name || ""
   editImageUrl.value = img.image_url || ""
   editImageDescription.value = img.description || ""
+  editImageSource.value = img.source || ""
   const speciesIds = getImageSpeciesIds(img)
   editImageSpeciesId.value = speciesIds.length ? speciesIds[0] : null
   editDialogOpen.value = true
@@ -246,6 +239,7 @@ function openAddDialog() {
   newImageName.value = ""
   newImageUrl.value = ""
   newImageDescription.value = ""
+  newImageSource.value = ""
   newImageSpeciesId.value = null
   addDialogOpen.value = true
 }
@@ -255,6 +249,7 @@ function closeAddDialog() {
   newImageName.value = ""
   newImageUrl.value = ""
   newImageDescription.value = ""
+  newImageSource.value = ""
 }
 
 async function updateImage() {
@@ -265,6 +260,7 @@ async function updateImage() {
       name: editImageName.value,
       image_url: editImageUrl.value,
       description: editImageDescription.value,
+      source: editImageSource.value,
       plant_species_id: editImageSpeciesId.value,
     })
 
@@ -277,25 +273,23 @@ async function updateImage() {
 
 async function deleteImage(id) {
   await axios.delete(`http://localhost:3000/image/${id}`)
-  loadImages() // refresh liste
+  loadImages()
 }
-
-
-
 
 async function addImage() {
   if (!newImageUrl.value) return
 
   try {
     await axios.post("http://localhost:3000/image", {
-        name: newImageName.value,
+      name: newImageName.value,
       image_url: newImageUrl.value,
       description: newImageDescription.value,
+      source: newImageSource.value,
       plant_species_id: newImageSpeciesId.value,
     })
 
     closeAddDialog()
-    loadImages() // refresh grid
+    loadImages()
   } catch (e) {
     console.error("Error adding image:", e)
   }
@@ -315,19 +309,20 @@ async function addImage() {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 20px;
+  position: relative;
+  z-index: 10;
 }
 
-.upload-btn {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
+.filter-row {
+  margin-bottom: 20px;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
+  position: relative;
+  z-index: 1;
 }
 
 .card {
@@ -336,19 +331,11 @@ async function addImage() {
   align-items: center;
 }
 
-.image-placeholder {
-  width: 120px;
-  height: 120px;
-  background: #ccc;
-}
-
 .real-image {
   width: 120px;
   height: 120px;
   object-fit: cover;
 }
-
-
 
 .actions {
   margin-top: 5px;
@@ -356,16 +343,6 @@ async function addImage() {
   gap: 10px;
   font-size: 18px;
   cursor: pointer;
-}
-
-.top-bar {
-  position: relative;
-  z-index: 10;
-}
-
-.grid {
-  position: relative;
-  z-index: 1;
 }
 
 .edit-dialog {
@@ -398,11 +375,16 @@ async function addImage() {
   line-height: 1.3;
 }
 
+.image-source {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
 .species-name {
   font-size: 11px;
   color: #888;
   margin-top: 2px;
   font-style: italic;
 }
-
 </style>

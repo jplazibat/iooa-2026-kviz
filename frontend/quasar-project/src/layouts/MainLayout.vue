@@ -17,14 +17,13 @@
           </q-avatar>
           Dobrodošli u kviz o biljnim vrstama
         </q-toolbar-title>
-
-        <!-- <q-btn
-          href="http://agro.veleri.hr/biljne-vrste/"
-          label="Glavna stranica"
+        <q-btn
+          href="#/admingallery"
+          label="Admin"
           color="white"
           flat
-          icon="home"
-        /> -->
+          icon="admin_panel_settings"
+        />
         <q-btn
           href="https://www.agroklub.com/sortna-lista/"
           label="Agro klub"

@@ -42,9 +42,6 @@ app.get("/plant_species", (request, response) => {
   });
 });
 
-
-
-
 // Retrieve all botanical families
 app.get("/botanical_family", (request, response) => {
   dbConn.query("SELECT * FROM botanical_family", (error, results) => {
@@ -68,6 +65,7 @@ app.get("/images", (req, res) => {
            i.name,
            i.image_url,
            i.description,
+           i.source,
            GROUP_CONCAT(DISTINCT psi.plant_species_id) AS plant_species_ids,
            GROUP_CONCAT(DISTINCT ps.croatian_name SEPARATOR ', ') AS plant_species_names,
            GROUP_CONCAT(DISTINCT ps.latin_name SEPARATOR ', ') AS plant_species_latin_names
@@ -77,7 +75,6 @@ app.get("/images", (req, res) => {
   const params = [];
 
   if (speciesId) {
-    // Ako je filter postavljen, koristi INNER JOIN da bi se filtriralo
     sql += `
       INNER JOIN plant_species_image psi ON i.id = psi.image_id
       INNER JOIN plant_species ps ON psi.plant_species_id = ps.id
@@ -85,7 +82,6 @@ app.get("/images", (req, res) => {
     `;
     params.push(speciesId);
   } else {
-    // Inače koristi LEFT JOIN da prikaže sve slike
     sql += `
       LEFT JOIN plant_species_image psi ON i.id = psi.image_id
       LEFT JOIN plant_species ps ON psi.plant_species_id = ps.id
@@ -112,15 +108,20 @@ app.get("/images", (req, res) => {
 
 
 // api za brisanje slika
+// Ispravak: briše i iz plant_species_image junction tablice
 app.delete("/image/:id", (req, res) => {
   let image_id = req.params.id;
 
-  dbConn.query("DELETE FROM image WHERE id=?", image_id, (error, results) => {
+  dbConn.query("DELETE FROM plant_species_image WHERE image_id=?", image_id, (error) => {
     if (error) throw error;
 
-    res.send({
-      error: false,
-      message: "Image deleted",
+    dbConn.query("DELETE FROM image WHERE id=?", image_id, (error2) => {
+      if (error2) throw error2;
+
+      res.send({
+        error: false,
+        message: "Image deleted",
+      });
     });
   });
 });
@@ -129,7 +130,7 @@ app.delete("/image/:id", (req, res) => {
 // api za uredivanje slika
 app.put("/image/:id", (req, res) => {
   const image_id = req.params.id;
-  const { name, image_url, description, plant_species_id } = req.body;
+  const { name, image_url, description, source, plant_species_id } = req.body;
   const mappedSpeciesId = plant_species_id ? plant_species_id : null;
 
   if (!image_url) {
@@ -140,8 +141,8 @@ app.put("/image/:id", (req, res) => {
   }
 
   dbConn.query(
-    "UPDATE image SET name=?, image_url=?, description=? WHERE id=?",
-    [name, image_url, description, image_id],
+    "UPDATE image SET name=?, image_url=?, description=?, source=? WHERE id=?",
+    [name, image_url, description, source || null, image_id],
     (error, results) => {
       if (error) {
         console.error("SQL ERROR:", error);
@@ -210,7 +211,7 @@ app.put("/image/:id", (req, res) => {
 app.post("/image", (req, res) => {
   console.log("POST HIT:", req.body);
 
-  const { name, image_url, description, plant_species_id } = req.body;
+  const { name, image_url, description, source, plant_species_id } = req.body;
   const mappedSpeciesId = plant_species_id ? plant_species_id : null;
 
   if (!image_url) {
@@ -221,8 +222,8 @@ app.post("/image", (req, res) => {
   }
 
   dbConn.query(
-  "INSERT INTO image (name, image_url, description, source) VALUES (?, ?, ?, ?)",
-  [name, image_url, description, "admin"],
+    "INSERT INTO image (name, image_url, description, source) VALUES (?, ?, ?, ?)",
+    [name, image_url, description, source || null],
     (error, results) => {
       if (error) {
         console.error("SQL ERROR:", error);
@@ -262,7 +263,6 @@ app.post("/image", (req, res) => {
     }
   );
 });
-
 
 
 // Retrieve plant_species with id
@@ -447,7 +447,7 @@ app.get("/genus/:id", function (request, response) {
     });
   }
   dbConn.query(
-    "SELECT g.id, g.latin_name FROM genus g LEFT JOIN plant_species ps ON g.id=ps.genus_id WHERE ps.id=?", // SQL UPIT RADI
+    "SELECT g.id, g.latin_name FROM genus g LEFT JOIN plant_species ps ON g.id=ps.genus_id WHERE ps.id=?",
     plant_species_id,
     function (error, results, fields) {
       if (error) throw error;
@@ -459,8 +459,6 @@ app.get("/genus/:id", function (request, response) {
     }
   );
 });
-
-
 
 // Kojoj botaničkoj porodici pripada biljka sa slikom
 app.get('/plant_family_question', (req, res) => {
@@ -482,7 +480,6 @@ app.get('/plant_family_question', (req, res) => {
       const plant = results[0];
       const correctFamily = plant.family;
 
-      // Prikupi ostale porodice za netočne odgovore
       const incorrectQuery = `
         SELECT DISTINCT bf.croatian_name
         FROM botanical_family bf
@@ -494,9 +491,8 @@ app.get('/plant_family_question', (req, res) => {
       dbConn.query(incorrectQuery, [correctFamily], (error, incorrectResults) => {
         if (error) throw error;
 
-        // Kombiniraj točan i netočne odgovore
         const answers = [correctFamily, ...incorrectResults.map(row => row.croatian_name)];
-        const shuffledAnswers = answers.sort(() => Math.random() - 0.5); // Random odgovor
+        const shuffledAnswers = answers.sort(() => Math.random() - 0.5);
 
         res.json({
           question: `Kojoj botaničkoj porodici pripada biljka sa slikom?`,
@@ -529,7 +525,6 @@ app.get('/pitanje/:id', (req, res) => {
     });
   });
 });
-
 
 
 app.listen(3000, function () {
