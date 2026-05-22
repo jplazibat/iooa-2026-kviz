@@ -43,6 +43,14 @@
           @click="logout"
         />
         <q-btn
+          flat
+          color="white"
+          label="Admin"
+          icon="admin_panel_settings"
+          @click="$router.push('/PregledBiljaka')"
+        />
+
+        <q-btn
           href="https://www.agroklub.com/sortna-lista/"
           label="Agro klub"
           color="white"
