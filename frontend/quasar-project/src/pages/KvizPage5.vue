@@ -16,16 +16,23 @@
             <strong v-if="state.praznina.aktivan"> ________ ?</strong>
           </span>
 
-          <span class="tezina"> (Težina: {{ state.tezina }}) </span>
+          <span class="tezina">
+            (Težina: {{ state.tezina }})
+          </span>
         </div>
       </q-banner>
 
-      <q-img width="700px" height="350px" :src="state.image" :ratio="16 / 9" />
+      <q-img
+        width="700px"
+        height="350px"
+        :src="state.image"
+        :ratio="16 / 9"
+      />
     </div>
 
     <!-- ODGOVORI -->
     <div class="q-pa-md odgovori">
-      <!-- Postojeći radio odgovori (MCQ i True/False) -->
+      <!-- MCQ / TRUE FALSE -->
       <template v-if="!state.praznina.aktivan">
         <q-radio
           v-for="odgovor in state.odgovori"
@@ -37,55 +44,54 @@
         />
       </template>
 
-      <!-- Novi tip: popunjavanje praznine -->
+      <!-- PRAZNINA -->
       <template v-else>
-  <div class="crtice-container" @keydown="handleCrticeKeydown">
-    <template v-for="(slovo, i) in state.praznina.crticePrikaz" :key="i">
-      <!-- Razmak između riječi -->
-      <span v-if="slovo === ' '" class="crtice-razmak">&nbsp;&nbsp;</span>
+        <div class="crtice-container">
+          <template
+            v-for="(slovo, i) in state.praznina.crticePrikaz"
+            :key="i"
+          >
+            <span
+              v-if="slovo === ' '"
+              class="crtice-razmak"
+            >
+              &nbsp;&nbsp;
+            </span>
 
-      <!-- Slovo kao input -->
-      <input
-        v-else
-        :ref="el => { if (el) crticaRefs[i] = el }"
-        v-model="state.praznina.crticePrikaz[i]"
-        class="crtice-input"
-        maxlength="1"
-        :disabled="state.praznina.odgovorPotvrden"
-        @input="onCrticaInput(i)"
-        @keydown.delete="onCrticaDelete(i, $event)"
-      />
-    </template>
-  </div>
-</template>
+            <input
+              v-else
+              :ref="el => { if (el) crticaRefs[i] = el }"
+              v-model="state.praznina.crticePrikaz[i]"
+              class="crtice-input"
+              maxlength="1"
+              :disabled="state.praznina.odgovorPotvrden"
+              @input="onCrticaInput(i)"
+              @keydown.delete="onCrticaDelete(i)"
+            />
+          </template>
+        </div>
+      </template>
     </div>
 
     <!-- BUTTONS -->
     <div class="q-pa-md q-gutter-sm">
       <q-btn
+        v-if="state.questionNumber < 10"
         id="PrihvatiOdgovor"
         color="white"
         text-color="black"
         label="Prihvati odgovor"
-        @click="
-          prikaziGumb();
-          state.alert = true;
-          if (state.odabraniOdgovor === state.tocanOdgovor.id) {
-            state.brojTocnih += 1;
-            state.bodovi += state.tezina; // Dodaj bodove za točan odgovor
-          } else {
-            state.brojNetocnih += 1;
-          }
-        "
+        @click="checkAnswer"
       />
+
       <q-btn
         id="PrihvatiIZavrsi"
         color="white"
         text-color="black"
         label="Prihvati i završi"
         @click="handleFinish"
-        disabled
       />
+
       <q-btn
         color="white"
         text-color="black"
@@ -96,71 +102,47 @@
 
     <!-- ALERT -->
     <q-dialog v-model="state.alert" persistent>
-      <q-card :class="state.lastCorrect ? 'bg-positive text-white' : 'bg-negative text-white'">
-
-        <!-- ONLY ONE RESULT -->
+      <q-card
+        :class="
+          state.lastCorrect
+            ? 'bg-positive text-white'
+            : 'bg-negative text-white'
+        "
+      >
         <q-card-section class="q-pt-none">
-          <!-- TRUE / FALSE -->
-          <div v-if="state.trueFalseMode">
-            <div v-if="state.lastCorrect" class="text-h6 q-mt-sm">✓ TOČNO</div>
-
-            
-
-            <div v-else>
-              <div class="text-h6 q-mt-sm">✗ NETOČNO</div>
-              <div class="q-mt-sm">
-                Biljka sa slike je:
-                <b>{{ state.plant.croatian_name }}</b>
-              </div>
-              <div class="q-mt-xs">
-                Latinski naziv: <b>{{ state.plant.latin_name }}</b>
-              </div>
-              <div class="q-mt-xs" v-if="state.trueFalsePorodica">
-                Porodica: <b>{{ state.trueFalsePorodica }}</b>
-              </div>
-            </div>
+          <div
+            v-if="state.lastCorrect"
+            class="text-h6 q-mt-sm"
+          >
+            ✓ TOČNO
           </div>
 
-          <!-- MCQ -->
-          <div v-else-if="!state.praznina.aktivan">
-            <div v-if="state.lastCorrect" class="text-h6 q-mt-sm">✓ TOČNO</div>
-
-            <div v-else>
-              <div class="text-h6 q-mt-sm">✗ NETOČNO</div>
-              <div class="q-mt-sm">
-                Biljka sa slike je:
-                <b>{{ state.plant.croatian_name }}</b>
-              </div>
-              <div class="q-mt-xs">
-                Latinski naziv: <b>{{ state.plant.latin_name }}</b>
-              </div>
-              <div class="q-mt-xs" v-if="state.trueFalsePorodica">
-                Porodica: <b>{{ state.trueFalsePorodica }}</b>
-              </div>
-            </div>
-          </div>
-
-          <!-- PRAZNINA -->
           <div v-else>
-            <div v-if="state.lastCorrect" class="text-h6 q-mt-sm">✓ TOČNO</div>
+            <div class="text-h6 q-mt-sm">
+              ✗ NETOČNO
+            </div>
 
-            <div v-else>
-              <div class="text-h6 q-mt-sm">✗ NETOČNO</div>
-              <div class="q-mt-sm">
-                Biljka sa slike je:
-                <b>{{ state.plant.croatian_name }}</b>
-              </div>
-              <div class="q-mt-xs">
-                Latinski naziv: <b>{{ state.plant.latin_name }}</b>
-              </div>
-              <div class="q-mt-xs" v-if="state.trueFalsePorodica">
-                Porodica: <b>{{ state.trueFalsePorodica }}</b>
-              </div>
+            <div class="q-mt-sm">
+              Biljka sa slike je:
+              <b>{{ state.plant.croatian_name }}</b>
+            </div>
+
+            <div class="q-mt-xs">
+              Latinski naziv:
+              <b>{{ state.plant.latin_name }}</b>
+            </div>
+
+            <div
+              class="q-mt-xs"
+              v-if="state.trueFalsePorodica"
+            >
+              Porodica:
+              <b>{{ state.trueFalsePorodica }}</b>
             </div>
           </div>
         </q-card-section>
 
-<q-card-section
+        <q-card-section
           v-if="!state.lastCorrect && state.porukaOhrabrenja"
           class="q-pt-none text-white text-weight-medium"
         >
@@ -171,16 +153,18 @@
           v-if="state.funFact"
           class="q-pt-none text-white"
         >
-          <div class="text-weight-bold">Zanimljivost:</div>
+          <div class="text-weight-bold">
+            Zanimljivost:
+          </div>
+
           <div>{{ state.funFact }}</div>
         </q-card-section>
 
-        <!-- ACTION -->
         <q-card-actions align="right">
           <q-btn
             flat
             label="OK"
-            :color="state.trueFalseMode ? 'white' : 'primary'"
+            :color="state.lastCorrect ? 'white' : 'primary'"
             @click="nextQuestion"
             v-close-popup
           />
@@ -192,7 +176,9 @@
     <q-dialog v-model="state.zavrsniPopup" persistent>
       <q-card>
         <q-card-section class="text-center">
-          <div class="text-h6">Kraj kviza</div>
+          <div class="text-h6">
+            Kraj kviza
+          </div>
         </q-card-section>
 
         <q-card-section class="text-center">
@@ -202,7 +188,12 @@
         </q-card-section>
 
         <q-card-actions align="center">
-          <q-btn flat label="Početna" color="primary" href="/" />
+          <q-btn
+            flat
+            label="Početna"
+            color="primary"
+            href="/"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -212,7 +203,8 @@
 <script>
 import { onMounted, reactive } from "vue";
 import axios from "axios";
-
+import { useQuasar } from "quasar";
+import { useRouter } from "vue-router";
 
 const porukeOhrabrenja = [
   "Nema veze, sljedeći pokušaj može biti uspješniji!",
@@ -221,17 +213,18 @@ const porukeOhrabrenja = [
   "Znanje se stječe postupno.",
   "Učenje je proces, a ne savršenstvo.",
   "Trud i upornost vode do rezultata.",
-  "Napredak dolazi kroz trud i ponavljanje."
+  "Napredak dolazi kroz trud i ponavljanje.",
 ];
-import { useQuasar } from "quasar";
-import { useRouter } from 'vue-router'
-var clicks = 1; // brojevi idu redom, ne ponavljaju se
-
 
 export default {
   setup() {
+    
+    
+    const crticaRefs = {};
+
     const state = reactive({
       plant: {},
+
       pitanje: "",
       trueFalsePitanje: "",
       trueFalseMode: false,
@@ -249,44 +242,367 @@ export default {
       bodovi: 0,
 
       image: "",
+
       alert: false,
       zavrsniPopup: false,
 
-porukaOhrabrenja: "",
-funFact: "",
-tezina: 1,
+      porukaOhrabrenja: "",
+      funFact: "",
+      tezina: 1,
 
-lastCorrect: false,
-trueFalsePorodica: "",
+      lastCorrect: false,
+      trueFalsePorodica: "",
 
-praznina: {
-  aktivan: false,
-  uneseniOdgovor: "",
-  tocniOdgovor: "",
-  odgovorPotvrden: false,
-  crticePrikaz: [],
-},
+      praznina: {
+        aktivan: false,
+        uneseniOdgovor: "",
+        tocniOdgovor: "",
+        odgovorPotvrden: false,
+        crticePrikaz: [],
+      },
     });
-
-    const crticaRefs = {};
-
-      tezina: 1, //tezina
-    })
-     const $q = useQuasar()
-     const router = useRouter();
-
+    const $q = useQuasar()
+    const router = useRouter();
+    
     onMounted(async () => {
-
-      await loadQuestion();
-    });
-
-    async function handleClose() {
       await randomPlant();
       await getRandomBotanicalPlant();
       await getImage();
+    });
+    onMounted(async () => {
+      await loadQuestion();
+    });
+
+    // ================= LOAD QUESTION =================
+
+    async function loadQuestion() {
+      await randomPlant();
+      await getImage();
+
+      state.odabraniOdgovor = null;
+      state.alert = false;
+      state.lastCorrect = false;
+
+      state.praznina.odgovorPotvrden = false;
+      state.praznina.uneseniOdgovor = "";
     }
 
-    // Funkcija za završetak kviza i spremanje rezultata
+    // ================= RANDOM PLANT =================
+
+    async function randomPlant() {
+      const json = await axios.get(
+        "http://localhost:3000/plant_species/"
+      );
+
+      const plants = json.data.data;
+
+      state.plant =
+        plants[Math.floor(Math.random() * plants.length)];
+
+      state.tezina =
+        Math.floor(Math.random() * 5) + 1;
+
+      const randomMode = Math.random();
+
+      if (randomMode < 0.33) {
+        state.trueFalseMode = true;
+        state.praznina.aktivan = false;
+      } else if (randomMode < 0.66) {
+        state.trueFalseMode = false;
+        state.praznina.aktivan = true;
+      } else {
+        state.trueFalseMode = false;
+        state.praznina.aktivan = false;
+      }
+    }
+
+    // ================= IMAGE =================
+
+    async function getImage() {
+      const imageRes = await axios.get(
+        `http://localhost:3000/image/${state.plant.id}`
+      );
+
+      state.image =
+        imageRes.data.data?.image_url || "";
+
+      state.pitanje =
+        "Latinski naziv za " +
+        state.plant.croatian_name +
+        " je";
+
+      state.praznina.tocniOdgovor =
+        state.plant.latin_name;
+
+      state.praznina.crticePrikaz =
+        state.praznina.tocniOdgovor
+          .split("")
+          .map((c) => (c === " " ? " " : ""));
+
+      await setupTrueFalse();
+      await loadAnswers();
+      await getFunFact();
+    }
+
+    // ================= TRUE FALSE =================
+
+    async function setupTrueFalse() {
+      if (!state.trueFalseMode) return;
+
+      const json = await axios.get(
+        "http://localhost:3000/plant_species/"
+      );
+
+      const all = json.data.data;
+
+      const showCorrect = Math.random() > 0.5;
+
+      if (showCorrect) {
+        state.trueFalseCorrect = 1;
+
+        state.trueFalsePitanje =
+          "Biljka sa slike je: " +
+          state.plant.croatian_name;
+      } else {
+        let wrong;
+
+        do {
+          wrong =
+            all[
+              Math.floor(Math.random() * all.length)
+            ];
+        } while (wrong.id === state.plant.id);
+
+        state.trueFalseCorrect = 0;
+
+        state.trueFalsePitanje =
+          "Biljka sa slike je: " +
+          wrong.croatian_name;
+      }
+
+      try {
+        const porodicaRes = await axios.get(
+          `http://localhost:3000/botanical_family_plant_species/${state.plant.id}`
+        );
+
+        state.trueFalsePorodica =
+          porodicaRes.data.data?.croatian_name ||
+          "";
+      } catch (e) {
+        state.trueFalsePorodica = "";
+      }
+    }
+
+    // ================= FUN FACT =================
+
+    async function getFunFact() {
+      try {
+        const json = await axios.get(
+          `http://localhost:3000/fun_fact/${state.plant.id}`
+        );
+
+        const data = json.data.data;
+
+        state.funFact =
+          data && data.fun_fact
+            ? data.fun_fact
+            : "";
+      } catch {
+        state.funFact = "";
+      }
+    }
+
+    // ================= ANSWERS =================
+
+    async function loadAnswers() {
+      if (state.trueFalseMode) {
+        state.odgovori = [
+          {
+            id: 1,
+            croatian_name: "Točno",
+          },
+          {
+            id: 0,
+            croatian_name: "Netočno",
+          },
+        ];
+
+        return;
+      }
+
+      if (state.praznina.aktivan) {
+        return;
+      }
+
+      const json = await axios.get(
+        "http://localhost:3000/plant_species/"
+      );
+
+      const plants = json.data.data;
+
+      state.tocanOdgovor = {
+        id: state.plant.id,
+        latin_name: state.plant.latin_name,
+        isCorrect: true,
+      };
+
+      let list = [state.tocanOdgovor];
+
+      while (list.length < 4) {
+        const randomPlant =
+          plants[
+            Math.floor(Math.random() * plants.length)
+          ];
+
+        if (
+          !list.some(
+            (x) => x.id === randomPlant.id
+          )
+        ) {
+          list.push({
+            id: randomPlant.id,
+            latin_name: randomPlant.latin_name,
+            isCorrect: false,
+          });
+        }
+      }
+
+      state.odgovori = list
+        .map((v) => ({
+          value: v,
+          sort: Math.random(),
+        }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
+    }
+
+    // ================= CRTICE =================
+
+    function onCrticaInput(i) {
+      let next = i + 1;
+
+      while (
+        next <
+          state.praznina.crticePrikaz.length &&
+        state.praznina.crticePrikaz[next] === " "
+      ) {
+        next++;
+      }
+
+      if (
+        next <
+        state.praznina.crticePrikaz.length
+      ) {
+        crticaRefs[next]?.focus();
+      }
+
+      state.praznina.uneseniOdgovor =
+        state.praznina.crticePrikaz.join("");
+    }
+
+    function onCrticaDelete(i) {
+      if (
+        state.praznina.crticePrikaz[i] !== ""
+      )
+        return;
+
+      let prev = i - 1;
+
+      while (
+        prev >= 0 &&
+        state.praznina.crticePrikaz[prev] === " "
+      ) {
+        prev--;
+      }
+
+      if (prev >= 0) {
+        crticaRefs[prev]?.focus();
+        state.praznina.crticePrikaz[prev] = "";
+      }
+    }
+
+    // ================= LABEL =================
+
+    function getLabel(o) {
+      return state.trueFalseMode
+        ? o.croatian_name
+        : o.latin_name;
+    }
+
+    // ================= CHECK ANSWER =================
+
+    function checkAnswer() {
+      // PRAZNINA
+      if (state.praznina.aktivan) {
+        const uneseno =
+          state.praznina.uneseniOdgovor
+            .trim()
+            .toLowerCase();
+
+        const tocno =
+          state.praznina.tocniOdgovor
+            .trim()
+            .toLowerCase();
+
+        state.lastCorrect =
+          uneseno === tocno;
+
+        state.praznina.odgovorPotvrden =
+          true;
+      } else {
+        // TRUE/FALSE
+        if (state.trueFalseMode) {
+          state.lastCorrect =
+            state.odabraniOdgovor ===
+            state.trueFalseCorrect;
+        } else {
+          // MCQ
+          const selected =
+            state.odgovori.find(
+              (o) =>
+                o.id ===
+                state.odabraniOdgovor
+            );
+
+          state.lastCorrect =
+            selected?.isCorrect === true;
+        }
+      }
+
+      if (state.lastCorrect) {
+        state.brojTocnih++;
+        state.bodovi += state.tezina;
+        state.porukaOhrabrenja = "";
+      } else {
+        state.brojNetocnih++;
+
+        state.porukaOhrabrenja =
+          porukeOhrabrenja[
+            Math.floor(
+              Math.random() *
+                porukeOhrabrenja.length
+            )
+          ];
+      }
+
+      state.alert = true;
+    }
+
+    // ================= NEXT =================
+
+    async function nextQuestion() {
+      if (state.questionNumber >= 10) {
+        state.zavrsniPopup = true;
+        return;
+      }
+
+      state.questionNumber++;
+
+      await loadQuestion();
+    }
+
+    // ================= FINISH =================
+
 async function handleFinish() {
   // logika bodova
   if (state.odabraniOdgovor === state.tocanOdgovor.id) {
@@ -347,295 +663,29 @@ async function handleFinish() {
   state.zavrsniPopup = true;
 }
 
+    
+  
 
-    async function getImage() {
-      const json = await axios.get(
-        `http://localhost:3000/image/${state.plant.id}`
-      );
-      const data = json.data.data;
-
-      if (data) {
-        if (
-          Object.getOwnPropertyNames(json.data).length === 0 ||
-          json.data.data === undefined
-        ) {
-          state.image = "";
-        } else {
-          state.pitanje =
-            "Latinski naziv za " + state.plant.croatian_name + " je";
-          state.praznina.tocniOdgovor = state.plant.latin_name;
-        }
-
-        state.praznina.crticePrikaz = state.praznina.tocniOdgovor
-    .split("")
-    .map(c => (c === " " ? " " : ""));
-
-      } else {
-        state.pitanje =
-          "Koji je latinski naziv za " + state.plant.croatian_name + "?";
-      }
-
-      await setupTrueFalse();
-      await loadAnswers();
-      await loadImage();
-      await getFunFact();
-
-    }
-
-    // ================= TRUE/FALSE =================
-
-    async function setupTrueFalse() {
-      if (!state.trueFalseMode) return;
-
-      const json = await axios.get("http://localhost:3000/plant_species/");
-      const all = json.data.data;
-
-      const showCorrect = Math.random() > 0.5;
-
-      if (showCorrect) {
-        state.trueFalseCorrect = 1;
-
-        state.trueFalsePitanje =
-          "Biljka sa slike je: " + state.plant.croatian_name;
-      } else {
-        let wrong;
-
-        do {
-          wrong = all[Math.floor(Math.random() * all.length)];
-        } while (wrong.id === state.plant.id);
-
-        state.trueFalseCorrect = 0;
-
-        state.trueFalsePitanje = "Biljka sa slike je: " + wrong.croatian_name;
-      }
-
-      try {
-        const porodicaRes = await axios.get(
-          `http://localhost:3000/botanical_family_plant_species/${state.plant.id}`
-        );
-        state.trueFalsePorodica = porodicaRes.data.data?.croatian_name || "";
-      } catch (e) {
-        state.trueFalsePorodica = "";
-      }
-    }
-async function getFunFact() {
-  const json = await axios.get(`http://localhost:3000/fun_fact/${state.plant.id}`);
-  const data = json.data.data;
-
-  if (data && data.fun_fact) {
-    state.funFact = data.fun_fact;
-  } else {
-    state.funFact = "";
-  }
-}
-
-    // ================= ANSWERS =================
-    async function loadAnswers() {
-      if (state.trueFalseMode) {
-        state.odgovori = [
-          { id: 1, croatian_name: "Točno" },
-          { id: 0, croatian_name: "Netočno" },
-        ];
-
-        state.odabraniOdgovor = null;
-      } else {
-        const json = await axios.get("http://localhost:3000/botanical_family");
-        const families = json.data.data;
-
-        const correct = await axios.get(
-          `http://localhost:3000/plant_species/${state.plant.id}`
-        );
-
-        state.tocanOdgovor = correct.data.data;
-
-        let list = [
-          {
-            id: state.tocanOdgovor.id,
-            latin_name: state.tocanOdgovor.latin_name,
-            isCorrect: true,
-          },
-        ];
-
-        while (list.length < 4) {
-          let obj = families[Math.floor(Math.random() * families.length)];
-
-          if (!list.some((x) => x.id === obj.id)) {
-            list.push({
-              id: obj.id,
-              latin_name: obj.latin_name,
-              isCorrect: false,
-            });
-          }
-        }
-
-        state.odgovori = list
-          .map((v) => ({ value: v, sort: Math.random() }))
-          .sort((a, b) => a.sort - b.sort)
-          .map(({ value }) => value);
-
-        state.odabraniOdgovor = null;
-      }
-    }
-
-    // ================= IMAGE =================
-    async function loadImage() {
-      const json = await axios.get(
-        `http://localhost:3000/image/${state.plant.id}`
-      );
-
-      state.image = json.data.data?.image_url || "";
-    }
-
-    // ================= CRTICE =================
-function onCrticaInput(i) {
-  let next = i + 1;
-  while (next < state.praznina.crticePrikaz.length && state.praznina.crticePrikaz[next] === " ") {
-    next++;
-  }
-  if (next < state.praznina.crticePrikaz.length) {
-    crticaRefs[next]?.focus();
-  }
-
-  state.praznina.uneseniOdgovor = state.praznina.crticePrikaz.join("");
-}
-
-function onCrticaDelete(i, event) {
-  if (state.praznina.crticePrikaz[i] !== "") return;
-
-  let prev = i - 1;
-  while (prev >= 0 && state.praznina.crticePrikaz[prev] === " ") {
-    prev--;
-  }
-  if (prev >= 0) {
-    crticaRefs[prev]?.focus();
-    state.praznina.crticePrikaz[prev] = "";
-  }
-}
-
-    // ================= LABEL =================
-    function getLabel(o) {
-      return state.trueFalseMode ? o.croatian_name : o.latin_name;
-    }
-
-    // ================= CHECK =================
-    function checkAnswer() {
-      // Provjera za tip praznine
-      if (state.praznina.aktivan) {
-        const uneseno = state.praznina.uneseniOdgovor.trim().toLowerCase();
-        const tocno = state.praznina.tocniOdgovor.trim().toLowerCase();
-        state.lastCorrect = uneseno === tocno;
-        state.praznina.odgovorPotvrden = true;
-
-        if (state.lastCorrect) {
-          state.brojTocnih++;
-          state.bodovi += state.tezina;
-          state.porukaOhrabrenja = "";
-        } else {
-          state.brojNetocnih++;
-          state.porukaOhrabrenja =
-          porukeOhrabrenja[Math.floor(Math.random() * porukeOhrabrenja.length)];
-        }
-
-        state.alert = true;
-        return;
-      }
-
-      if (state.odabraniOdgovor === null) return;
-
-      let isCorrect = false;
-
-      if (state.trueFalseMode) {
-        isCorrect = state.odabraniOdgovor === state.trueFalseCorrect;
-      } else {
-        const selected = state.odgovori.find(
-          (o) => o.id === state.odabraniOdgovor
-        );
-
-        isCorrect = selected?.isCorrect === true;
-      }
-
-      state.lastCorrect = isCorrect;
-
-      if (isCorrect) {
-        state.brojTocnih++;
-        state.bodovi += state.tezina;
-        state.porukaOhrabrenja = "";
-      } else {
-        state.brojNetocnih++;
-        state.porukaOhrabrenja =
-        porukeOhrabrenja[Math.floor(Math.random() * porukeOhrabrenja.length)];
-      }
-
-      state.alert = true;
-    }
-
-    // ================= NEXT =================
-    async function nextQuestion() {
-      if (state.questionNumber >= 10) {
-        state.zavrsniPopup = true;
-        return;
-      }
-      state.questionNumber++;
-      await loadQuestion();
-    }
 
     // ================= RESTART =================
+
     function restartQuiz() {
       window.location.reload();
     }
 
-    let brojKlikova = 0;
-
-    function provjeriOdgovor() {
-      if (state.odabraniOdgovor === state.tocanOdgovor.id) {
-        state.brojTocnih += 1;
-        state.bodovi += state.tezina;
-        state.porukaOhrabrenja = "";
-      } else {
-        state.brojNetocnih += 1;
-        state.porukaOhrabrenja =
-          porukeOhrabrenja[Math.floor(Math.random() * porukeOhrabrenja.length)];
-      }
-    }
-
-    function prihvatiOdgovor() {
-      brojKlikova += 1;
-      provjeriOdgovor();
-      state.alert = true;
-
-      if (brojKlikova >= 8) {
-        const button1 = document.getElementById("PrihvatiOdgovor");
-        const button2 = document.getElementById("PrihvatiIZavrsi");
-        const button3 = document.getElementById("Refresh");
-
-        if (button2) button2.removeAttribute("disabled");
-        if (button3) button3.removeAttribute("disabled");
-        if (button1) {
-          button1.setAttribute("disabled", true);
-          button1.style.display = "none";
-        }
-      }
-    }
-
-    function prihvatiIZavrsi() {
-      provjeriOdgovor();
-      state.zavrsniPopup = true;
-    }
-
     return {
       state,
-     
-      handleClose,
-      prihvatiOdgovor,
-      prihvatiIZavrsi,
       crticaRefs,
+
       onCrticaInput,
       onCrticaDelete,
+
       checkAnswer,
       nextQuestion,
       restartQuiz,
-      getLabel,
+      handleFinish,
 
+      getLabel,
     };
   },
 };
@@ -643,7 +693,6 @@ function onCrticaDelete(i, event) {
 
 <style>
 .tezina {
-  /*css tezina*/
   font-size: 20px;
   color: white;
   margin-left: 10px;
@@ -681,6 +730,5 @@ function onCrticaDelete(i, event) {
 
 .crtice-razmak {
   width: 16px;
-
-}</style>
-
+}
+</style>
