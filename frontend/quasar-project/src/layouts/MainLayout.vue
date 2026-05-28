@@ -18,7 +18,6 @@
           Dobrodošli u kviz o biljnim vrstama
         </q-toolbar-title>
         <q-btn
-          href="#/admingallery"
           label="Admin"
           color="white"
           flat
